@@ -315,7 +315,7 @@ const TEMPLATES={
       b==='squat'
         ?{id:'rdl',name:'RDL bilanciere',sets:4,lo:6,hi:8,rest:150,equip:'barbell',note:'Flessione pura d\u2019anca, schiena piatta, bilanciere lungo le cosce. Carico lombare moderato.'}
         :{id:'deadlift',name:'Stacco convenzionale',sets:4,lo:4,hi:6,rest:240,equip:'barbell',note:'Protagonista del blocco stacco. Riscaldamento esteso, schiena neutra, spinta di gambe.'},
-      {id:'bss',name:'Bulgarian split squat',sets:3,lo:6,hi:8,rest:120,equip:'dumbbell',note:'Eccezione monolaterale, una gamba per volta. Piede posteriore su panchetta, busto leggermente avanti, ginocchio in traccia. Manubri ai lati.'},
+      {id:'bss',name:'Bulgarian split squat',sets:3,lo:6,hi:8,rest:120,equip:'dumbbell',note:'Eccezione monolaterale, una gamba per volta. Piede posteriore su panchetta, busto leggermente avanti, ginocchio in traccia. Manubri ai lati. Una serie = entrambe le gambe (prima un lato, poi l\u2019altro); il recupero pieno parte solo dopo aver completato entrambe.'},
       {id:'legcurlpron',name:'Leg curl prono',sets:3,lo:8,hi:10,rest:90,equip:'machine',note:'Variante prona, diversa dal seduto.'},
       {id:'calfseat',name:'Calf seduto (soleo)',sets:3,lo:10,hi:12,rest:60,equip:'machine',note:'Ginocchio flesso = isola il soleo. ROM completo.'}
     ]},
@@ -380,8 +380,8 @@ function targetFor(ex,info){
   if(!last)return{w:null,reps:ex.lo,reason:'prima volta — scegli il carico'};
   const lw=topW(last.sets);
   if(info.phase.deload)return{w:lw?roundLoad(lw*0.6,ex.equip):null,reps:ex.lo,reason:'deload ~60%'};
-  const valid=last.sets.filter(s=>s.r>0);
-  const hitTop=valid.length>=ex.sets&&valid.every(s=>s.r>=ex.hi);
+  const atTop=last.sets.filter(s=>(s.w||0)===lw&&s.r>=ex.hi).length;
+  const hitTop=atTop>=ex.sets;
   if(hitTop){
     if(lw>0){const inc=incFor(lw,ex.equip);return{w:lw+inc,reps:ex.lo,reason:'chiuso il top → +'+inc+' kg'};}
     return{w:0,reps:ex.lo,reason:'top chiuso → aggiungi zavorra o rep'};
@@ -389,6 +389,7 @@ function targetFor(ex,info){
   return{w:lw||null,reps:ex.lo,reason:'punta a più ripetizioni'};
 }
 function fmtSets(sets){return sets.map(s=>s.r).join('\u00b7');}
+function fmtLast(sets){if(!sets||!sets.length)return '';const ws=sets.map(s=>s.w||0);const eq=ws.every(w=>w===ws[0]);if(eq){return (ws[0]?ws[0]+' kg × ':'')+sets.map(s=>s.r).join('\u00b7');}return sets.map(s=>(s.w||0)+'×'+s.r).join(' \u00b7 ');}
 
 let cur=null;
 let _activeRef=null;
@@ -407,7 +408,9 @@ function rowsFor(ex){
   }
   return a.data[ex.id];
 }
-function updateSet(id,i,field,val){const a=getActiveRef();if(!a.data[id])return;a.data[id][i][field]=val;LS.s(KA,a);}
+function updateSet(id,i,field,val){const a=getActiveRef();if(!a.data[id])return;a.data[id][i][field]=val;
+  if(field==='w'&&i===0&&val!==''){for(let j=1;j<a.data[id].length;j++){if(!a.data[id][j].done){a.data[id][j].w=val;const inp=document.getElementById('w_'+id+'_'+j);if(inp)inp.value=val;}}}
+  LS.s(KA,a);}
 function toggleDone(id,i,rest){const a=getActiveRef();const r=a.data[id][i];r.done=!r.done;LS.s(KA,a);if(r.done)startRest(rest);renderFocus();}
 function addSet(id){const a=getActiveRef();const rows=a.data[id];const lastW=rows.length?rows[rows.length-1].w:'';rows.push({w:lastW,r:'',done:false});LS.s(KA,a);renderFocus();}
 function removeSet(id,i){const a=getActiveRef();a.data[id].splice(i,1);LS.s(KA,a);renderFocus();}
@@ -459,7 +462,7 @@ function renderToday(){
       const last=lastOf(ex.id);
       const done=exDone(ex);
       const tg=t.w!=null?(t.w>0?'→ '+t.w+' kg':'a corpo libero'):'da impostare';
-      const lastTxt=last?'ultima '+(topW(last.sets)?topW(last.sets)+' × ':'')+fmtSets(last.sets):'—';
+      const lastTxt=last?'ultima '+fmtLast(last.sets):'—';
       const num=String(idx+1).padStart(2,'0');
       inner+='<div class="led-row '+(done?'done':'')+'" onclick="openFocusEx('+idx+')">'
         +'<div class="led-i">'+(done?'✓':num)+'</div>'
@@ -511,12 +514,12 @@ function renderFocus(){
       const rv=(r.r!==''&&r.r!=null)?r.r:'';
       setRows+='<div class="set-row '+(r.done?'done on':'')+'">'
         +'<div class="set-n">'+(i+1)+'</div>'
-        +'<input class="set-i" inputmode="decimal" value="'+wv+'" placeholder="'+(ex.equip==='bodyweight'?'+kg':'kg')+'" onchange="updateSet(\''+ex.id+'\','+i+',\'w\',this.value)">'
+        +'<input class="set-i" id="w_'+ex.id+'_'+i+'" inputmode="decimal" value="'+wv+'" placeholder="'+(ex.equip==='bodyweight'?'+kg':'kg')+'" onchange="updateSet(\''+ex.id+'\','+i+',\'w\',this.value)">'
         +'<input class="set-i" inputmode="numeric" value="'+rv+'" placeholder="rep" onchange="updateSet(\''+ex.id+'\','+i+',\'r\',this.value)">'
         +'<button class="set-ck" onclick="toggleDone(\''+ex.id+'\','+i+','+ex.rest+')">'+(r.done?'☑':'☐')+'</button>'
         +'</div>';
     });
-    const lastTxt=last?'ultima '+(topW(last.sets)?topW(last.sets)+' kg × ':'')+fmtSets(last.sets)+(mx&&mx.w?' · max '+mx.w+' kg':''):'nessuno storico';
+    const lastTxt=last?'ultima '+fmtLast(last.sets)+(mx&&mx.w?' · max '+mx.w+' kg':''):'nessuno storico';
     html+='<div class="fc-ex">'
       +'<div class="fc-nm iz-dsp">'+ex.name+'</div>'
       +'<div class="fc-meta">'
@@ -591,7 +594,7 @@ function renderHistory(){
   html+='<div class="ss-pos">Sedute completate: <b>'+SESS().length+'</b></div>';
   sessions.forEach(s=>{
     let ex='';
-    (s.entries||[]).forEach(e=>{ex+='<div class="hblk-ex"><span>'+e.name+'</span><span>'+(topW(e.sets)?topW(e.sets)+'kg × ':'')+fmtSets(e.sets)+'</span></div>';});
+    (s.entries||[]).forEach(e=>{ex+='<div class="hblk-ex"><span>'+e.name+'</span><span>'+fmtLast(e.sets)+'</span></div>';});
     if(!ex)ex='<div class="hblk-ex"><span style="color:var(--dimmer)">nessuna serie</span><span></span></div>';
     html+='<div class="hblk"><div class="hblk-top"><div class="hblk-nm">'+s.name+' <span class="hblk-bl">· '+s.block+'</span></div><div class="hblk-dt">'+fmtIT(s.date)+'</div></div>'+ex+'</div>';
   });
