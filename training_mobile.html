@@ -127,6 +127,8 @@ button{cursor:pointer;background:none;border:none}
 .fc-nav button{flex:1;border-right:1px solid var(--line);padding:15px 0;font-family:var(--dsp);font-size:18px;font-weight:700;color:var(--dim);letter-spacing:.03em}
 .fc-nav button:last-child{border-right:none;color:var(--acc)}
 .fc-nav button:disabled{color:var(--dimmer);opacity:.5}
+#editsess{position:fixed;inset:0;z-index:500;display:none;flex-direction:column;padding-top:var(--safe-top)}
+#editsess.show{display:flex}
 
 /* TIMER */
 #rest{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + var(--safe-bottom));z-index:450;background:var(--bg);border-top:1px solid var(--accb);padding:13px 18px;display:none}
@@ -153,7 +155,8 @@ button{cursor:pointer;background:none;border:none}
 .sec-h::after{content:'';flex:1;height:1px;background:var(--line)}
 .ss-pos{font-size:12px;color:var(--dim);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:11px 0;line-height:1.7;margin-bottom:16px}
 .ss-pos b{color:var(--paper)}
-.hblk{border-top:1px solid var(--line);padding:13px 0}
+.hblk{border-top:1px solid var(--line);padding:13px 0;cursor:pointer}
+.hblk:active{opacity:.7}
 .hblk-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
 .hblk-nm{font-family:var(--dsp);font-size:19px;font-weight:700}
 .hblk-bl{font-size:11px;color:var(--dim);font-family:var(--mono);font-weight:400}
@@ -255,6 +258,19 @@ button{cursor:pointer;background:none;border:none}
   </div>
 </div>
 
+<!-- EDIT SESSION -->
+<div id="editsess" class="gridbg">
+  <div class="fc-bar">
+    <button class="fc-back" onclick="closeEditSession()">‹ storico</button>
+    <span class="fc-step" id="es-step"></span>
+  </div>
+  <div class="fc-body" id="es-body"></div>
+  <div class="fc-nav">
+    <button onclick="closeEditSession()">Annulla</button>
+    <button onclick="saveEditSession()">Salva</button>
+  </div>
+</div>
+
 <!-- SETTINGS -->
 <div id="settings">
   <div class="set-sheet">
@@ -330,6 +346,8 @@ const TEMPLATES={
     ]}
 };
 
+const ID2EQUIP={};
+['lowerA','upperA','lowerB','upperB'].forEach(k=>['squat','stacco'].forEach(b=>TEMPLATES[k].ex(b).forEach(e=>{ID2EQUIP[e.id]=e.equip;})));
 const KC='tt_cfg',KSE='tt_sessions',KA='tt_active';
 const LS={g:(k,d=null)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 let cfg=LS.g(KC,null);
@@ -588,20 +606,57 @@ function undoLast(){
 }
 
 function renderHistory(){
-  const sessions=SESS().slice().reverse();
+  const all=SESS();const sessions=all.slice().reverse();
   let html='<div class="sec"><div class="sec-h">storico</div>';
   if(!sessions.length){html+='<div class="empty">Nessuna seduta completata.<br>Le sedute appariranno qui.</div></div>';document.getElementById('v-history').innerHTML=html;return;}
-  html+='<div class="ss-pos">Sedute completate: <b>'+SESS().length+'</b></div>';
-  sessions.forEach(s=>{
+  html+='<div class="ss-pos">Sedute completate: <b>'+all.length+'</b> · tocca una seduta per modificarla</div>';
+  sessions.forEach((s,ri)=>{
+    const pos=all.length-1-ri;
     let ex='';
     (s.entries||[]).forEach(e=>{ex+='<div class="hblk-ex"><span>'+e.name+'</span><span>'+fmtLast(e.sets)+'</span></div>';});
     if(!ex)ex='<div class="hblk-ex"><span style="color:var(--dimmer)">nessuna serie</span><span></span></div>';
-    html+='<div class="hblk"><div class="hblk-top"><div class="hblk-nm">'+s.name+' <span class="hblk-bl">· '+s.block+'</span></div><div class="hblk-dt">'+fmtIT(s.date)+'</div></div>'+ex+'</div>';
+    html+='<div class="hblk" onclick="openEditSession('+pos+')"><div class="hblk-top"><div class="hblk-nm">'+s.name+' <span class="hblk-bl">· '+s.block+'</span></div><div class="hblk-dt">'+fmtIT(s.date)+' <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-1px;opacity:.65"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg></div></div>'+ex+'</div>';
   });
   html+='</div>';
   document.getElementById('v-history').innerHTML=html;
 }
 
+let editCtx=null;
+function openEditSession(pos){
+  const s=SESS()[pos];if(!s)return;
+  editCtx={pos,data:(s.entries||[]).map(e=>({id:e.id,name:e.name,sets:(e.sets||[]).map(x=>({w:x.w,r:x.r}))}))};
+  document.getElementById('editsess').classList.add('show');renderEditSess();
+}
+function closeEditSession(){document.getElementById('editsess').classList.remove('show');editCtx=null;}
+function renderEditSess(){
+  if(!editCtx)return;const s=SESS()[editCtx.pos];if(!s){closeEditSession();return;}
+  document.getElementById('es-step').textContent=s.name+' · '+fmtIT(s.date);
+  let html='';
+  editCtx.data.forEach((e,ei)=>{
+    const bw=ID2EQUIP[e.id]==='bodyweight';let setRows='';
+    e.sets.forEach((st,si)=>{
+      setRows+='<div class="set-row"><div class="set-n">'+(si+1)+'</div>'
+        +'<input class="set-i" inputmode="decimal" value="'+(st.w!=null&&st.w!==''?st.w:'')+'" placeholder="'+(bw?'+kg':'kg')+'" onchange="updateEditSet('+ei+','+si+',\'w\',this.value)">'
+        +'<input class="set-i" inputmode="numeric" value="'+(st.r!=null&&st.r!==''?st.r:'')+'" placeholder="rep" onchange="updateEditSet('+ei+','+si+',\'r\',this.value)">'
+        +'<button class="set-ck" style="color:var(--red)" onclick="removeEditSet('+ei+','+si+')">✕</button></div>';
+    });
+    html+='<div class="fc-ex"><div class="fc-nm iz-dsp">'+e.name+'</div>'
+      +'<div class="set-hdr"><span></span><span>'+(bw?'+kg':'kg')+'</span><span>rep</span><span></span></div>'
+      +'<div class="sets">'+setRows+'</div>'
+      +'<div class="set-tools"><button class="set-add" onclick="addEditSet('+ei+')">+ aggiungi serie</button></div></div>';
+  });
+  document.getElementById('es-body').innerHTML=html;
+}
+function updateEditSet(ei,si,f,v){if(!editCtx)return;editCtx.data[ei].sets[si][f]=(v===''?'':+v);}
+function addEditSet(ei){if(!editCtx)return;const ss=editCtx.data[ei].sets;ss.push({w:ss.length?ss[ss.length-1].w:'',r:''});renderEditSess();}
+function removeEditSet(ei,si){if(!editCtx)return;editCtx.data[ei].sets.splice(si,1);renderEditSess();}
+function saveEditSession(){
+  if(!editCtx)return;const sessions=SESS();const s=sessions[editCtx.pos];if(!s){closeEditSession();return;}
+  const entries=[];
+  editCtx.data.forEach(e=>{const sets=e.sets.filter(x=>+x.r>0).map(x=>({w:+x.w||0,r:+x.r}));if(sets.length)entries.push({id:e.id,name:e.name,sets});});
+  s.entries=entries;sessions[editCtx.pos]=s;LS.s(KSE,sessions);
+  closeEditSession();renderHistory();
+}
 function renderProgram(){
   const info=infoFor(cfg.done);
   let html='<div class="sec"><div class="sec-h">programma</div>'
