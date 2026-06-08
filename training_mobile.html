@@ -129,6 +129,10 @@ button{cursor:pointer;background:none;border:none}
 .fc-nav button:disabled{color:var(--dimmer);opacity:.5}
 #editsess{position:fixed;inset:0;z-index:500;display:none;flex-direction:column;padding-top:var(--safe-top)}
 #editsess.show{display:flex}
+.es-add{display:flex;flex-direction:column;gap:7px;margin-top:9px}
+.es-add.hidden{display:none}
+.es-addbtn{text-align:left;border:1px solid var(--line2);color:var(--paper);padding:11px 13px;font-size:14px}
+.es-addbtn:active{border-color:var(--acc);color:var(--acc)}
 
 /* TIMER */
 #rest{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + var(--safe-bottom));z-index:450;background:var(--bg);border-top:1px solid var(--accb);padding:13px 18px;display:none}
@@ -645,11 +649,25 @@ function renderEditSess(){
       +'<div class="sets">'+setRows+'</div>'
       +'<div class="set-tools"><button class="set-add" onclick="addEditSet('+ei+')">+ aggiungi serie</button></div></div>';
   });
+  if(s.tplKey&&TEMPLATES[s.tplKey]){
+    const have=new Set(editCtx.data.map(e=>e.id));
+    const missing=TEMPLATES[s.tplKey].ex(s.block).filter(p=>!have.has(p.id));
+    if(missing.length){
+      html+='<div class="fc-ex" style="border-bottom:none"><button class="set-add" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">+ aggiungi esercizio dimenticato</button><div class="es-add hidden">';
+      missing.forEach(p=>{html+='<button class="es-addbtn" onclick="addEditExercise(\''+p.id+'\')">'+p.name+' <span style="color:var(--dimmer)">· '+p.sets+'×'+p.lo+'–'+p.hi+'</span></button>';});
+      html+='</div></div>';
+    }
+  }
   document.getElementById('es-body').innerHTML=html;
 }
 function updateEditSet(ei,si,f,v){if(!editCtx)return;editCtx.data[ei].sets[si][f]=(v===''?'':+v);}
 function addEditSet(ei){if(!editCtx)return;const ss=editCtx.data[ei].sets;ss.push({w:ss.length?ss[ss.length-1].w:'',r:''});renderEditSess();}
 function removeEditSet(ei,si){if(!editCtx)return;editCtx.data[ei].sets.splice(si,1);renderEditSess();}
+function addEditExercise(id){
+  if(!editCtx)return;const s=SESS()[editCtx.pos];if(!s||!s.tplKey||!TEMPLATES[s.tplKey])return;
+  const tex=TEMPLATES[s.tplKey].ex(s.block).find(x=>x.id===id);if(!tex||editCtx.data.some(e=>e.id===id))return;
+  editCtx.data.push({id:tex.id,name:tex.name,sets:Array.from({length:tex.sets},()=>({w:'',r:''}))});renderEditSess();
+}
 function saveEditSession(){
   if(!editCtx)return;const sessions=SESS();const s=sessions[editCtx.pos];if(!s){closeEditSession();return;}
   const entries=[];
