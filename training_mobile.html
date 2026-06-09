@@ -245,7 +245,7 @@ button{cursor:pointer;background:none;border:none}
   </div>
 
   <nav id="nav">
-    <button class="nav-b active" id="nav-today" onclick="showView('today')"><span class="nl">oggi</span></button>
+    <button class="nav-b active" id="nav-today" onclick="showView('today')"><span class="nl">seduta</span></button>
     <button class="nav-b" id="nav-hist" onclick="showView('history')"><span class="nl">storico</span></button>
     <button class="nav-b" id="nav-prog" onclick="showView('program')"><span class="nl">programma</span></button>
   </nav>
@@ -483,7 +483,7 @@ function renderToday(){
   document.getElementById('tb-title').textContent=cur.tpl.name;
   const info=cur.info,ph=info.phase;
   let html='<div class="t-hdr">'
-    +'<div class="t-over">// seduta '+(cfg.done+1)+' · oggi</div>'
+    +'<div class="t-over">// seduta '+(cfg.done+1)+'</div>'
     +'<div class="t-name iz-dsp">'+cur.tpl.name+'</div>'
     +'<div class="t-focus">'+cur.tpl.focus+'</div>'
     +'<div class="t-chips">'
