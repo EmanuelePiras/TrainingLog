@@ -56,6 +56,9 @@ button{cursor:pointer;background:none;border:none}
 .tb-sq{width:11px;height:11px;background:var(--acc);flex-shrink:0}
 .tb-title{font-family:var(--dsp);font-size:19px;font-weight:700;flex:1;letter-spacing:.02em}
 .tb-icon{color:var(--dim);padding:7px;flex-shrink:0;display:flex;align-items:center}
+@keyframes tbspin{to{transform:rotate(360deg)}}
+.tb-icon.syncing{color:var(--acc)}
+.tb-icon.syncing svg{animation:tbspin .8s linear infinite}
 .tb-icon:active{color:var(--acc)}
 #views{flex:1;overflow:hidden;position:relative}
 .view{position:absolute;inset:0;overflow-y:auto;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 96px)}
@@ -602,8 +605,10 @@ function renderFocus(){
   document.getElementById('fc-body').innerHTML=html;
   document.getElementById('fc-prev').disabled=focusStepIdx===0;
   const nb=document.getElementById('fc-next');
-  nb.disabled=focusStepIdx===cur.steps.length-1;
-  nb.textContent=focusStepIdx===cur.steps.length-1?'Ultimo':'Avanti ›';
+  const lastStep=focusStepIdx===cur.steps.length-1;
+  nb.disabled=false;
+  nb.textContent=lastStep?'Fine seduta ›':'Avanti ›';
+  nb.onclick=lastStep?function(){closeFocus();}:function(){focusStep(1);};
 }
 
 let timer={t:0,total:0,run:false,iv:null};
@@ -637,6 +642,7 @@ function completeSession(){
   cfg.done++;saveCfg();
   _activeRef={idx:cfg.done,data:{}};LS.s(KA,_activeRef);
   closeFocus();timerStop();renderToday();
+  autoSync();
   alert('Seduta completata. Prossima: '+TEMPLATES[infoFor(cfg.done).tplKey].name);
 }
 function undoLast(){
@@ -787,15 +793,16 @@ async function syncDown(){
     applyTheme(cfg.theme||'light');ssMsg('✓ scaricato','var(--grn)');closeSettings();renderToday();
   }catch(e){ssMsg('✗ errore di rete','var(--red)');}
 }
+function autoSync(){if(cfg&&cfg.sync&&cfg.sync.key&&cfg.sync.binId)syncUpQuick();}
 function quickSync(){if(cfg&&cfg.sync&&cfg.sync.key&&cfg.sync.binId){syncUpQuick();}else openSettings();}
 async function syncUpQuick(){
-  const el=document.getElementById('tb-sync');el.textContent='⟳';
+  const el=document.getElementById('tb-sync');el.classList.add('syncing');
   try{
     const payload={savedAt:new Date().toISOString(),cfg,sessions:SESS()};
     const res=await fetch(JBIN+'/b/'+cfg.sync.binId,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':cfg.sync.key,'X-Bin-Name':'TrainingLog'},body:JSON.stringify(payload)});
-    el.textContent=res.ok?'✓':'✗';
-  }catch(e){el.textContent='✗';}
-  setTimeout(()=>{el.innerHTML=SYNC_SVG;},1800);
+    el.classList.remove('syncing');el.textContent=res.ok?'✓':'✗';el.style.color=res.ok?'var(--grn)':'var(--red)';
+  }catch(e){el.classList.remove('syncing');el.textContent='✗';el.style.color='var(--red)';}
+  setTimeout(()=>{el.innerHTML=SYNC_SVG;el.style.color='';},1800);
 }
 
 function exportData(){
