@@ -124,6 +124,7 @@ button{cursor:pointer;background:none;border:none}
 .set-add:active{border-color:var(--acc);color:var(--acc)}
 .set-rm{border:1px solid var(--line2);color:var(--dimmer);font-size:14px;padding:9px 14px}
 .note-tog{display:inline-flex;align-items:center;gap:6px;color:var(--dim);font-size:12px;margin-top:13px}
+.yt-btn{display:inline-flex;align-items:center;color:var(--acc);padding:3px;vertical-align:middle;margin-left:6px}
 .note-box{background:var(--surf);border-left:2px solid var(--accb);padding:11px 13px;font-size:13px;color:var(--dim);line-height:1.6;margin-top:9px}
 .note-box.hidden{display:none}
 .fc-inactive{padding:14px 18px;border-top:2px solid var(--line2);background:var(--surf);cursor:pointer}
@@ -286,6 +287,7 @@ button{cursor:pointer;background:none;border:none}
     <h2>Impostazioni</h2>
     <div class="ss-f"><label>Tema</label><div class="ss-row"><button class="btn" id="th-light" onclick="setTheme('light')">Chiaro</button><button class="btn" id="th-dark" onclick="setTheme('dark')">Scuro</button></div></div>
     <div class="ss-pos" id="ss-pos"></div>
+    <div class="ss-f"><label>YouTube · canale di riferimento</label><input id="ytc" placeholder="Meg Squats" autocomplete="off" onchange="if(cfg){cfg.ytChannel=this.value.trim();saveCfg();}"></div>
     <button class="btn danger" style="width:100%;margin-bottom:9px" onclick="undoLast()">Annulla ultima seduta</button>
     <div class="divider"></div>
     <div class="ss-f"><label>JSONBin · API Key</label><input id="sk" placeholder="$2a$10$..." autocomplete="off"></div>
@@ -306,32 +308,33 @@ const ROT=['upper','lower'];
 const STEP={barbell:1,dumbbell:2,machine:2,bodyweight:1};
 const MI=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
 const DI=['dom','lun','mar','mer','gio','ven','sab'];
+const YT_SVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M11 10l4 2-4 2v-4z" fill="currentColor" stroke="none"/></svg>';
 const SYNC_SVG='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 18a4 4 0 0 1-.5-7.97A5 5 0 0 1 16 9.5a3.5 3.5 0 0 1 .5 6.97"/><path d="M12 19v-7M9.5 14l2.5-2.5L14.5 14"/></svg>';
 
 const TEMPLATES={
   upper:{name:'Upper',focus:'massa · parte alta',
     ex:b=>[
-      {id:'pushup',name:'Push-up su maniglie',sets:3,lo:8,hi:10,rest:90,equip:'bodyweight',note:'Spinta orizzontale. Corpo in linea, scapole che scorrono, scendi col petto tra le maniglie. Se 8\u201310 puliti non vengono, parti sulle ginocchia e progredisci.'},
-      {id:'rowdb',name:'Rematore manubrio (appoggio divano)',sets:3,lo:8,hi:10,rest:90,equip:'dumbbell',note:'Una mano e un ginocchio sul bracciolo del divano, schiena piatta. Tira di gomito verso l\u2019anca, una serie per lato. Il recupero parte dopo aver fatto entrambi i lati.'},
-      {id:'ohp',name:'Overhead press manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Spinta sopra la testa, in piedi o seduta sulla fit ball. Core stretto, niente inarcamento lombare, manubri che salgono in linea.'},
-      {id:'reverfly',name:'Reverse fly / rematore alto su fit ball',sets:3,lo:10,hi:12,rest:75,equip:'dumbbell',note:'Petto appoggiato sulla fit ball, apri le braccia ai lati portando le scapole verso il centro. Manubri leggeri, movimento controllato. Posteriori e dorsali alti.'},
-      {id:'curl',name:'Curl con EZ-bar',sets:3,lo:8,hi:10,rest:90,equip:'barbell',note:'Gomiti fermi ai fianchi, salita controllata senza slancio del busto. La presa EZ \u00e8 pi\u00f9 gentile sui polsi.'},
-      {id:'triext',name:'Estensione tricipiti EZ (overhead)',sets:3,lo:10,hi:12,rest:75,equip:'barbell',note:'EZ-bar sopra la testa, gomiti stretti e fermi, scendi dietro la nuca e stendi. Lavora il capo lungo del tricipite in allungamento.'},
-      {id:'lateral',name:'Alzate laterali manubri',sets:3,lo:12,hi:15,rest:60,equip:'dumbbell',note:'Manubri leggeri, salita fino all\u2019altezza delle spalle, niente slancio. Deltoide laterale: la tecnica conta pi\u00f9 del carico.'}
+      {id:'pushup',yt:'push up',name:'Push-up su maniglie',sets:3,lo:8,hi:10,rest:90,equip:'bodyweight',note:'Spinta orizzontale. Corpo in linea, scapole che scorrono, scendi col petto tra le maniglie. Se 8\u201310 puliti non vengono, parti sulle ginocchia e progredisci.'},
+      {id:'rowdb',yt:'one arm dumbbell row',name:'Rematore manubrio (appoggio divano)',sets:3,lo:8,hi:10,rest:90,equip:'dumbbell',note:'Una mano e un ginocchio sul bracciolo del divano, schiena piatta. Tira di gomito verso l\u2019anca, una serie per lato. Il recupero parte dopo aver fatto entrambi i lati.'},
+      {id:'ohp',yt:'dumbbell shoulder press',name:'Overhead press manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Spinta sopra la testa, in piedi o seduta sulla fit ball. Core stretto, niente inarcamento lombare, manubri che salgono in linea.'},
+      {id:'reverfly',yt:'dumbbell reverse fly',name:'Reverse fly / rematore alto su fit ball',sets:3,lo:10,hi:12,rest:75,equip:'dumbbell',note:'Petto appoggiato sulla fit ball, apri le braccia ai lati portando le scapole verso il centro. Manubri leggeri, movimento controllato. Posteriori e dorsali alti.'},
+      {id:'curl',yt:'ez bar curl',name:'Curl con EZ-bar',sets:3,lo:8,hi:10,rest:90,equip:'barbell',note:'Gomiti fermi ai fianchi, salita controllata senza slancio del busto. La presa EZ \u00e8 pi\u00f9 gentile sui polsi.'},
+      {id:'triext',yt:'overhead tricep extension',name:'Estensione tricipiti EZ (overhead)',sets:3,lo:10,hi:12,rest:75,equip:'barbell',note:'EZ-bar sopra la testa, gomiti stretti e fermi, scendi dietro la nuca e stendi. Lavora il capo lungo del tricipite in allungamento.'},
+      {id:'lateral',yt:'lateral raise',name:'Alzate laterali manubri',sets:3,lo:12,hi:15,rest:60,equip:'dumbbell',note:'Manubri leggeri, salita fino all\u2019altezza delle spalle, niente slancio. Deltoide laterale: la tecnica conta pi\u00f9 del carico.'}
     ]},
   lower:{name:'Lower',focus:'massa · gambe & glutei',
     ex:b=>[
-      {id:'deadlift',name:'Stacco da terra con EZ-bar',sets:3,lo:8,hi:10,rest:150,equip:'barbell',note:'Catena posteriore. Schiena neutra, spinta di gambe, EZ-bar vicina al corpo. Il miglior stimolo posteriore che hai a casa.'},
-      {id:'goblet',name:'Goblet squat manubrio',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Manubrio tenuto al petto, scendi tra le anche con busto eretto, talloni a terra. Ottimo per tecnica e gambe.'},
-      {id:'lunge',name:'Affondi / Bulgarian split squat manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Manubri ai lati, una gamba per volta, ginocchio in traccia. Una serie = entrambe le gambe; il recupero parte dopo aver completato i due lati.'},
-      {id:'hipthrust',name:'Hip thrust EZ-bar',sets:3,lo:10,hi:12,rest:90,equip:'barbell',note:'Schiena appoggiata al divano o alla fit ball, EZ-bar sull\u2019anca (usa un cuscino). Spingi coi glutei, pausa 1s in alto, niente iperestensione lombare.'},
-      {id:'calf',name:'Calf raise in piedi manubri',sets:3,lo:12,hi:15,rest:60,equip:'dumbbell',note:'Manubri ai lati, sali sulle punte con ROM completo, pausa 1s in basso. Puoi usare un rialzo sotto gli avampiedi.'},
-      {id:'core',name:'Core su fit ball / plank',sets:2,lo:12,hi:15,rest:60,equip:'bodyweight',abs:true,note:'Crunch sulla fit ball (ROM ampio) o plank a tenuta. Espira in contrazione, niente strappi al collo.'}
+      {id:'deadlift',yt:'deadlift',name:'Stacco da terra con EZ-bar',sets:3,lo:8,hi:10,rest:150,equip:'barbell',note:'Catena posteriore. Schiena neutra, spinta di gambe, EZ-bar vicina al corpo. Il miglior stimolo posteriore che hai a casa.'},
+      {id:'goblet',yt:'goblet squat',name:'Goblet squat manubrio',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Manubrio tenuto al petto, scendi tra le anche con busto eretto, talloni a terra. Ottimo per tecnica e gambe.'},
+      {id:'lunge',yt:'dumbbell lunge',name:'Affondi / Bulgarian split squat manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Manubri ai lati, una gamba per volta, ginocchio in traccia. Una serie = entrambe le gambe; il recupero parte dopo aver completato i due lati.'},
+      {id:'hipthrust',yt:'hip thrust',name:'Hip thrust EZ-bar',sets:3,lo:10,hi:12,rest:90,equip:'barbell',note:'Schiena appoggiata al divano o alla fit ball, EZ-bar sull\u2019anca (usa un cuscino). Spingi coi glutei, pausa 1s in alto, niente iperestensione lombare.'},
+      {id:'calf',yt:'standing calf raise',name:'Calf raise in piedi manubri',sets:3,lo:12,hi:15,rest:60,equip:'dumbbell',note:'Manubri ai lati, sali sulle punte con ROM completo, pausa 1s in basso. Puoi usare un rialzo sotto gli avampiedi.'},
+      {id:'core',yt:'plank',name:'Core su fit ball / plank',sets:2,lo:12,hi:15,rest:60,equip:'bodyweight',abs:true,note:'Crunch sulla fit ball (ROM ampio) o plank a tenuta. Espira in contrazione, niente strappi al collo.'}
     ]}
 };
 
-const ID2EQUIP={};
-['upper','lower'].forEach(k=>TEMPLATES[k].ex().forEach(e=>{ID2EQUIP[e.id]=e.equip;}));
+const ID2EQUIP={},ID2YT={};
+['upper','lower'].forEach(k=>TEMPLATES[k].ex().forEach(e=>{ID2EQUIP[e.id]=e.equip;ID2YT[e.id]=e.yt||e.name;}));
 const KC='ts_cfg',KSE='ts_sessions',KA='ts_active';
 const LS={g:(k,d=null)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 let cfg=LS.g(KC,null);
@@ -445,6 +448,13 @@ function applyTheme(theme){
 function setTheme(t){if(!cfg)return;cfg.theme=(t==='dark')?'dark':'light';saveCfg();applyTheme(cfg.theme);}
 function toggleTheme(){setTheme(curTheme()==='dark'?'light':'dark');}
 
+function ytSearch(id){
+  const term=(typeof ID2YT!=='undefined'&&ID2YT[id])?ID2YT[id]:id;
+  const ch=(cfg&&cfg.ytChannel)?cfg.ytChannel.trim():'';
+  const q=ch?term+' '+ch:term+' technique';
+  window.open('https://www.youtube.com/results?search_query='+encodeURIComponent(q),'_blank');
+}
+function ytIcon(ex){return '<button class="yt-btn" onclick="event.stopPropagation();ytSearch(\''+ex.id+'\')" title="Guarda la tecnica su YouTube">'+YT_SVG+'</button>';}
 function renderToday(){
   cur=buildSession(cfg.done);
   cur.steps=buildSteps(cur.ex);
@@ -525,7 +535,7 @@ function renderExFull(ex,rir){
   });
   const lastTxt=last?'ultima '+fmtLast(last.sets)+(mx&&mx.w?' · max '+mx.w+' kg':''):'nessuno storico';
   return '<div class="fc-ex">'
-    +'<div class="fc-nm iz-dsp">'+ex.name+'</div>'
+    +'<div class="fc-nm iz-dsp">'+ex.name+ytIcon(ex)+'</div>'
     +'<div class="fc-meta">'
     +'<span class="fc-sr">'+ex.sets+' × '+ex.lo+'–'+ex.hi+'</span>'
     +(t.w!=null&&t.w>0?'<span class="tgt">→ '+t.w+' kg</span>':'')
@@ -719,6 +729,7 @@ function openSettings(){
   document.getElementById('ss-pos').innerHTML='Prossima: <b>'+TEMPLATES[info.tplKey].name+'</b> · seduta n. '+(cfg.done+1);
   document.getElementById('sk').value=(cfg.sync&&cfg.sync.key)||'';
   document.getElementById('sb').value=(cfg.sync&&cfg.sync.binId)||'';
+  document.getElementById('ytc').value=(cfg&&cfg.ytChannel)||'';
   document.getElementById('settings').classList.add('show');
 }
 function closeSettings(){document.getElementById('settings').classList.remove('show');}
@@ -783,13 +794,14 @@ function importData(e){
 function startProgram(){
   const d=document.getElementById('setupDate').value;
   if(!d){alert('Seleziona una data');return;}
-  cfg={start:d,done:0,sync:{},theme:'light'};saveCfg();LS.s(KA,{idx:0,data:{}});applyTheme('light');
+  cfg={start:d,done:0,sync:{},theme:'light',ytChannel:'Meg Squats'};saveCfg();LS.s(KA,{idx:0,data:{}});applyTheme('light');
   document.getElementById('setup').style.display='none';
   document.getElementById('app').style.display='flex';
   showView('today');
 }
 function init(){
   applyTheme((cfg&&cfg.theme)?cfg.theme:'light');
+  if(cfg&&!cfg.ytChannel){cfg.ytChannel='Meg Squats';saveCfg();}
   if(!cfg){
     document.getElementById('setupDate').value=today();
     document.getElementById('setup').style.display='flex';
