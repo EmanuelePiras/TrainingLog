@@ -124,6 +124,19 @@ button{cursor:pointer;background:none;border:none}
 .set-add:active{border-color:var(--acc);color:var(--acc)}
 .set-rm{border:1px solid var(--line2);color:var(--dimmer);font-size:14px;padding:9px 14px}
 .note-tog{display:inline-flex;align-items:center;gap:6px;color:var(--dim);font-size:12px;margin-top:13px}
+.yt-btn{display:inline-flex;align-items:center;color:var(--acc);padding:3px;vertical-align:middle;margin-left:6px}
+.cpl-lbl{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.04em;padding:16px 18px 0}
+.cpl-h{padding:12px 18px;border-bottom:1px solid var(--line)}
+.cpl-h-top{display:flex;align-items:center;gap:8px}
+.cpl-dot{width:8px;height:8px;background:var(--exc,var(--acc));flex-shrink:0;display:inline-block}
+.cpl-nm{font-size:22px}
+.cpl-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:11px;margin-top:7px}
+.cpl-add{flex:none;padding:6px 10px}
+.cpl-flow{padding:14px 18px 6px}
+.cpl-flow .set-hdr{grid-template-columns:66px 1fr 1fr 36px}
+.cpl-row{grid-template-columns:66px 1fr 1fr 36px;margin-bottom:8px}
+.cpl-rn{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);font-family:var(--mono);text-align:left}
+.cpl-row.on .cpl-rn{color:var(--acc)}
 .note-box{background:var(--surf);border-left:2px solid var(--accb);padding:11px 13px;font-size:13px;color:var(--dim);line-height:1.6;margin-top:9px}
 .note-box.hidden{display:none}
 .fc-inactive{padding:14px 18px;border-top:2px solid var(--line2);background:var(--surf);cursor:pointer}
@@ -286,6 +299,7 @@ button{cursor:pointer;background:none;border:none}
     <h2>Impostazioni</h2>
     <div class="ss-f"><label>Tema</label><div class="ss-row"><button class="btn" id="th-light" onclick="setTheme('light')">Chiaro</button><button class="btn" id="th-dark" onclick="setTheme('dark')">Scuro</button></div></div>
     <div class="ss-pos" id="ss-pos"></div>
+    <div class="ss-f"><label>YouTube · canale di riferimento</label><input id="ytc" placeholder="Jeff Nippard" autocomplete="off" onchange="if(cfg){cfg.ytChannel=this.value.trim();saveCfg();}"></div>
     <button class="btn danger" style="width:100%;margin-bottom:9px" onclick="undoLast()">Annulla ultima seduta</button>
     <div class="divider"></div>
     <div class="ss-f"><label>JSONBin · API Key</label><input id="sk" placeholder="$2a$10$..." autocomplete="off"></div>
@@ -313,50 +327,45 @@ const MACRO_LEN=28;
 const STEP={barbell:1,dumbbell:2,machine:2,bodyweight:1};
 const MI=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
 const DI=['dom','lun','mar','mer','gio','ven','sab'];
+const YT_SVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M11 10l4 2-4 2v-4z" fill="currentColor" stroke="none"/></svg>';
 const SYNC_SVG='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 18a4 4 0 0 1-.5-7.97A5 5 0 0 1 16 9.5a3.5 3.5 0 0 1 .5 6.97"/><path d="M12 19v-7M9.5 14l2.5-2.5L14.5 14"/></svg>';
 
 const TEMPLATES={
   lowerA:{name:'Lower A',focus:'forza · quad-dominant',
     ex:b=>[
-      b==='squat'
-        ?{id:'squat',name:'Squat low bar',sets:4,lo:4,hi:6,rest:210,equip:'barbell',note:'Protagonista del blocco squat. Schiena neutra, discesa controllata, recupero pieno tra le serie pesanti.'}
-        :{id:'hack',name:'Hack squat',sets:4,lo:6,hi:8,rest:150,equip:'machine',note:'In blocco stacco lo squat riposa: qui il quad senza carico spinale. ROM completo.'},
-      b==='squat'
-        ?{id:'hack',name:'Hack squat',sets:3,lo:6,hi:8,rest:120,equip:'machine',note:'Quad complementare allo squat, zero carico spinale.'}
-        :{id:'legext',name:'Leg extension',sets:3,lo:8,hi:10,rest:90,equip:'machine',note:'Isolamento quad, zero colonna. Breve pausa in contrazione.'},
-      {id:'legcurlsit',name:'Leg curl seduto',sets:3,lo:8,hi:10,rest:90,equip:'machine',note:'Femorali. Posizione seduta = massimo allungamento.'},
-      {id:'calfstand',name:'Calf raise in piedi',sets:3,lo:10,hi:12,rest:60,equip:'machine',note:'Gastrocnemio. ROM completo, pausa 1s in basso.'}
+      {id:'squat',name:'Squat low bar',sets:4,lo:4,hi:6,rest:210,equip:'barbell',yt:'low bar squat',note:'Schiena neutra, discesa controllata, recupero pieno tra le serie pesanti.'},
+      {id:'hack',name:'Hack squat',sets:3,lo:6,hi:8,rest:120,equip:'machine',yt:'hack squat',note:'Quad complementare allo squat, zero carico spinale. ROM completo.'},
+      {id:'rdl',name:'RDL bilanciere',sets:3,lo:8,hi:10,rest:120,equip:'barbell',yt:'romanian deadlift',note:'Femorali in allungamento. Flessione d\u2019anca, schiena piatta, bilanciere lungo le cosce. Moderato: fermati abbondante dal cedimento \u2014 non \u00e8 la giornata di carico sulla schiena.'},
+      {id:'calfstand',name:'Calf raise in piedi',sets:3,lo:10,hi:12,rest:60,equip:'machine',yt:'standing calf raise',note:'Gastrocnemio. ROM completo, pausa 1s in basso.'}
     ]},
   upperA:{name:'Upper A',focus:'forza · orizzontale (panca)',
     ex:b=>[
-      {id:'bench',name:'Panca piana',sets:4,lo:4,hi:6,rest:150,equip:'barbell',sup:'A1',suptype:'alternate',note:'Superset con rematore. Scapole addotte, percorso controllato.'},
-      {id:'rowdb',name:'Rematore manubrio',sets:3,lo:6,hi:8,rest:150,equip:'dumbbell',sup:'A1',suptype:'alternate',note:'Superset con panca. Tira di gomito, gabbia aperta.'},
-      {id:'dip',name:'Dip zavorrati',sets:3,lo:7,hi:9,rest:120,equip:'bodyweight',note:'Petto/tricipiti. Busto leggermente avanti per il petto.'},
-      {id:'curlinc',name:'Curl inclinato manubri',sets:3,lo:8,hi:10,rest:90,equip:'dumbbell',note:'Panca a 45°, gomito dietro il busto = massimo allungamento del capo lungo.'},
-      {id:'crunchcable',name:'Crunch ai cavi',sets:3,lo:10,hi:15,rest:60,equip:'machine',abs:true,note:'Addome — flessione caricabile. Arrotonda la colonna, espira in contrazione.'}
+      {id:'bench',name:'Panca piana',sets:4,lo:4,hi:6,rest:150,equip:'barbell',sup:'A1',suptype:'alternate',yt:'barbell bench press',note:'Serie alternate con rematore. Scapole addotte, percorso controllato.'},
+      {id:'rowdb',name:'Rematore manubrio',sets:3,lo:6,hi:8,rest:150,equip:'dumbbell',sup:'A1',suptype:'alternate',yt:'one arm dumbbell row',note:'Serie alternate con panca. Tira di gomito, gabbia aperta.'},
+      {id:'dip',name:'Dip zavorrati',sets:3,lo:7,hi:9,rest:120,equip:'bodyweight',yt:'weighted chest dip',note:'Petto/tricipiti. Busto leggermente avanti per il petto.'},
+      {id:'curlinc',name:'Curl inclinato manubri',sets:3,lo:8,hi:10,rest:90,equip:'dumbbell',yt:'incline dumbbell curl',note:'Panca a 45\u00b0, gomito dietro il busto = massimo allungamento del capo lungo.'},
+      {id:'crunchcable',name:'Crunch ai cavi',sets:3,lo:10,hi:15,rest:60,equip:'machine',abs:true,yt:'cable crunch',note:'Addome \u2014 flessione caricabile. Arrotonda la colonna, espira in contrazione.'}
     ]},
   lowerB:{name:'Lower B',focus:'forza · hip-dominant',
     ex:b=>[
-      b==='squat'
-        ?{id:'rdl',name:'RDL bilanciere',sets:4,lo:6,hi:8,rest:150,equip:'barbell',note:'Flessione pura d\u2019anca, schiena piatta, bilanciere lungo le cosce. Carico lombare moderato.'}
-        :{id:'deadlift',name:'Stacco convenzionale',sets:4,lo:4,hi:6,rest:240,equip:'barbell',note:'Protagonista del blocco stacco. Riscaldamento esteso, schiena neutra, spinta di gambe.'},
-      {id:'bss',name:'Bulgarian split squat',sets:3,lo:6,hi:8,rest:120,equip:'dumbbell',note:'Eccezione monolaterale, una gamba per volta. Piede posteriore su panchetta, busto leggermente avanti, ginocchio in traccia. Manubri ai lati. Una serie = entrambe le gambe (prima un lato, poi l\u2019altro); il recupero pieno parte solo dopo aver completato entrambe.'},
-      {id:'legcurlpron',name:'Leg curl prono',sets:3,lo:8,hi:10,rest:90,equip:'machine',note:'Variante prona, diversa dal seduto.'},
-      {id:'calfseat',name:'Calf seduto (soleo)',sets:3,lo:10,hi:12,rest:60,equip:'machine',note:'Ginocchio flesso = isola il soleo. ROM completo.'}
+      {id:'deadlift',name:'Stacco da terra',sets:4,lo:4,hi:6,rest:240,equip:'barbell',yt:'conventional deadlift',note:'Catena posteriore. Riscaldamento esteso, schiena neutra, spinta di gambe, bilanciere vicino al corpo.'},
+      {id:'bss',name:'Bulgarian split squat',sets:3,lo:6,hi:8,rest:120,equip:'dumbbell',yt:'bulgarian split squat',note:'Monolaterale. Piede posteriore su panchetta, busto leggermente avanti, ginocchio in traccia. Manubri ai lati. Una serie = entrambe le gambe; il recupero parte dopo aver completato i due lati.'},
+      {id:'legcurlpron',name:'Leg curl prono',sets:3,lo:8,hi:10,rest:90,equip:'machine',yt:'lying leg curl',note:'Femorali in flessione del ginocchio, variante prona.'},
+      {id:'calfseat',name:'Calf seduto (soleo)',sets:3,lo:10,hi:12,rest:60,equip:'machine',yt:'seated calf raise',note:'Ginocchio flesso = isola il soleo. ROM completo.'}
     ]},
   upperB:{name:'Upper B',focus:'forza · verticale (OHP)',
     ex:b=>[
-      {id:'ohp',name:'Military press',sets:4,lo:4,hi:6,rest:150,equip:'barbell',note:'Spinta verticale in piedi, core stretto, glutei contratti.'},
-      {id:'pullup',name:'Trazioni zavorrate',sets:3,lo:6,hi:10,rest:150,equip:'bodyweight',note:'Allungamento pieno in basso, mento sopra la sbarra.'},
-      {id:'inclinedb',name:'Inclinata 30° manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Seconda esposizione petto, angolo alto.'},
-      {id:'lateral',name:'Alzate laterali',sets:3,lo:12,hi:15,rest:60,equip:'dumbbell',sup:'B1',suptype:'superset',note:'Superset con face pull. Salita controllata, niente slancio.'},
-      {id:'facepull',name:'Face pull / rear delt',sets:3,lo:12,hi:15,rest:60,equip:'machine',sup:'B1',suptype:'superset',note:'Superset con alzate. Deltoide posteriore + salute della spalla.'},
-      {id:'dragonflag',name:'Dragon flag / ab wheel',sets:3,lo:4,hi:8,rest:75,equip:'bodyweight',abs:true,note:'Addome — anti-estensione. Corpo rigido, controlla la discesa.'}
+      {id:'ohp',name:'Military press',sets:4,lo:4,hi:6,rest:150,equip:'barbell',yt:'standing overhead press',note:'Spinta verticale in piedi, core stretto, glutei contratti.'},
+      {id:'pullup',name:'Trazioni zavorrate',sets:3,lo:6,hi:10,rest:150,equip:'bodyweight',yt:'weighted pull up',note:'Allungamento pieno in basso, mento sopra la sbarra.'},
+      {id:'inclinedb',name:'Inclinata 30\u00b0 manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',yt:'incline dumbbell press',note:'Seconda esposizione petto, angolo alto.'},
+      {id:'lateral',name:'Alzate laterali',sets:3,lo:12,hi:15,rest:60,equip:'dumbbell',sup:'B1',suptype:'superset',yt:'lateral raise',note:'Superset con face pull. Salita controllata, niente slancio.'},
+      {id:'facepull',name:'Face pull / rear delt',sets:3,lo:12,hi:15,rest:60,equip:'machine',sup:'B1',suptype:'superset',yt:'face pull',note:'Superset con alzate. Deltoide posteriore + salute della spalla.'},
+      {id:'dragonflag',name:'Dragon flag / ab wheel',sets:3,lo:4,hi:8,rest:75,equip:'bodyweight',abs:true,yt:'dragon flag',note:'Addome \u2014 anti-estensione. Corpo rigido, controlla la discesa.'}
     ]}
 };
 
-const ID2EQUIP={};
-['lowerA','upperA','lowerB','upperB'].forEach(k=>['squat','stacco'].forEach(b=>TEMPLATES[k].ex(b).forEach(e=>{ID2EQUIP[e.id]=e.equip;})));
+const ID2EQUIP={},ID2YT={};
+['lowerA','upperA','lowerB','upperB'].forEach(k=>TEMPLATES[k].ex().forEach(e=>{ID2EQUIP[e.id]=e.equip;ID2YT[e.id]=e.yt||e.name;}));
 const KC='tt_cfg',KSE='tt_sessions',KA='tt_active';
 const LS={g:(k,d=null)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 let cfg=LS.g(KC,null);
@@ -371,18 +380,16 @@ const fmtIT=s=>{const d=pd(s);return DI[d.getDay()]+' '+d.getDate()+' '+MI[d.get
 
 function infoFor(done){
   const tplKey=ROT[((done%4)+4)%4];
-  const macro=Math.floor(done/MACRO_LEN);
-  const block=(macro%2===0)?'squat':'stacco';
   const inMacro=((done%MACRO_LEN)+MACRO_LEN)%MACRO_LEN;
   const rotInMacro=Math.floor(inMacro/4)+1;
   let phase;
   if(inMacro<8)phase=PHASES[0];else if(inMacro<16)phase=PHASES[1];else if(inMacro<24)phase=PHASES[2];else phase=PHASES[3];
-  return{done,tplKey,macro,block,rotInMacro,inMacro,phase};
+  return{done,tplKey,inMacro,rotInMacro,phase};
 }
 function buildSession(done){
   const info=infoFor(done);
   const tpl=TEMPLATES[info.tplKey];
-  let ex=tpl.ex(info.block).map(e=>({...e}));
+  let ex=tpl.ex().map(e=>({...e}));
   if(info.phase.deload)ex=ex.map(e=>({...e,sets:Math.min(e.sets,2)}));
   return{info,tpl,ex};
 }
@@ -446,10 +453,9 @@ function toggleDone(id,i,rest){
       const exObjs=grp.map(j=>cur.ex[j]);
       const suptype=exObjs[0].suptype||'superset';
       const myIdx=exObjs.findIndex(e=>e.id===id);
-      const other=(myIdx+1)%grp.length;
-      if(suptype==='alternate'){startRest(rest);focusActiveExInStep=other;}
-      else{if(myIdx===grp.length-1){startRest(rest);focusActiveExInStep=0;}else{focusActiveExInStep=other;}}
-    }else{startRest(rest);}
+      if(suptype==='alternate')startRest(rest);
+      else if(myIdx===grp.length-1)startRest(rest);
+    }else startRest(rest);
   }
   renderFocus();
 }
@@ -459,10 +465,10 @@ function exDone(ex){const a=getActiveRef();const rows=a.data[ex.id];if(!rows)ret
 
 const SUN_SVG='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 const MOON_SVG='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z"/></svg>';
-const ACC={light:{squat:['#0e8794','rgba(14,135,148,.10)','rgba(14,135,148,.5)'],stacco:['#cf501c','rgba(207,80,28,.10)','rgba(207,80,28,.5)']},dark:{squat:['#2dd4e0','rgba(45,212,224,.10)','rgba(45,212,224,.45)'],stacco:['#ff6a2c','rgba(255,106,44,.10)','rgba(255,106,44,.45)']}};
+const ACC={light:{lowerA:['#0e8794','rgba(14,135,148,.10)','rgba(14,135,148,.5)'],lowerB:['#cf501c','rgba(207,80,28,.10)','rgba(207,80,28,.5)'],upperA:['#6d3bd6','rgba(109,59,214,.10)','rgba(109,59,214,.5)'],upperB:['#6d3bd6','rgba(109,59,214,.10)','rgba(109,59,214,.5)']},dark:{lowerA:['#2dd4e0','rgba(45,212,224,.10)','rgba(45,212,224,.45)'],lowerB:['#ff6a2c','rgba(255,106,44,.10)','rgba(255,106,44,.45)'],upperA:['#b18cff','rgba(177,140,255,.12)','rgba(177,140,255,.45)'],upperB:['#b18cff','rgba(177,140,255,.12)','rgba(177,140,255,.45)']}};
 function curTheme(){return (cfg&&cfg.theme==='dark')?'dark':'light';}
-function applyAccent(block){
-  const c=ACC[curTheme()][block]||ACC[curTheme()].squat;
+function applyAccent(key){
+  const c=ACC[curTheme()][key]||ACC[curTheme()].lowerA;
   const r=document.documentElement.style;
   r.setProperty('--acc',c[0]);r.setProperty('--accd',c[1]);r.setProperty('--accb',c[2]);
 }
@@ -473,16 +479,25 @@ function applyTheme(theme){
   const tb=document.getElementById('tb-theme');if(tb)tb.innerHTML=theme==='dark'?SUN_SVG:MOON_SVG;
   const l=document.getElementById('th-light'),d=document.getElementById('th-dark');
   if(l)l.classList.toggle('acc',theme==='light');if(d)d.classList.toggle('acc',theme==='dark');
-  applyAccent(cur?cur.info.block:'squat');
+  applyAccent(cur?cur.info.tplKey:'lowerA');
 }
 function setTheme(t){if(!cfg)return;cfg.theme=(t==='dark')?'dark':'light';saveCfg();applyTheme(cfg.theme);}
 function toggleTheme(){setTheme(curTheme()==='dark'?'light':'dark');}
 
+function ytSearch(id){
+  const term=(typeof ID2YT!=='undefined'&&ID2YT[id])?ID2YT[id]:id;
+  const ch=(cfg&&cfg.ytChannel)?cfg.ytChannel.trim():'';
+  const q=ch?term+' '+ch:term+' technique';
+  window.open('https://www.youtube.com/results?search_query='+encodeURIComponent(q),'_blank');
+}
+function ytIcon(ex){return '<button class="yt-btn" onclick="event.stopPropagation();ytSearch(\''+ex.id+'\')" title="Guarda la tecnica su YouTube">'+YT_SVG+'</button>';}
+const EXCOLORS=['var(--acc)','var(--ink)'];
+function exShort(ex){return ex.name.split(' ')[0];}
 function renderToday(){
   cur=buildSession(cfg.done);
   cur.steps=buildSteps(cur.ex);
   _activeRef=getActive();
-  applyAccent(cur.info.block);
+  applyAccent(cur.info.tplKey);
   document.getElementById('tb-title').textContent=cur.tpl.name;
   const info=cur.info,ph=info.phase;
   let html='<div class="t-hdr">'
@@ -490,12 +505,13 @@ function renderToday(){
     +'<div class="t-name iz-dsp">'+cur.tpl.name+'</div>'
     +'<div class="t-focus">'+cur.tpl.focus+'</div>'
     +'<div class="t-chips">'
-    +'<span class="ck"><span class="sq"></span>blocco '+info.block+'</span>'
-    +'<span class="'+(ph.deload?'cd':'cn')+'">'+ph.name+' · rot. '+info.rotInMacro+'/7</span>'
+    +'<span class="ck"><span class="sq"></span>'+ph.name+'</span>'
+    +'<span class="'+(ph.deload?'cd':'cn')+'">rot. '+info.rotInMacro+'/7</span>'
     +'<span class="cn">'+ph.rir+'</span>'
     +'</div></div><div class="led">';
   cur.steps.forEach(grp=>{
     const sup=grp.length>1;
+    const stype=sup?(cur.ex[grp[0]].suptype||'superset'):'';
     let inner='';
     grp.forEach(idx=>{
       const ex=cur.ex[idx];
@@ -511,20 +527,16 @@ function renderToday(){
         +'<div class="led-data"><div class="led-sr">'+ex.sets+'×'+ex.lo+'–'+ex.hi+'</div><div class="led-tg">'+tg+'</div></div>'
         +'</div>';
     });
-    html+=sup?'<div class="sup"><div class="sup-l">superset</div>'+inner+'</div>':inner;
+    html+=sup?'<div class="sup"><div class="sup-l">'+(stype==='alternate'?'serie alternate':'superset')+'</div>'+inner+'</div>':inner;
   });
   html+='</div><div class="complete-wrap"><button class="complete" onclick="completeSession()">Completa seduta</button></div>';
   document.getElementById('v-today').innerHTML=html;
 }
 
 let focusStepIdx=0;
-let focusActiveExInStep=0;
 function openFocusEx(exIdx){
   const si=cur.steps.findIndex(g=>g.includes(exIdx));
-  focusStepIdx=si<0?0:si;
-  const pos=cur.steps[focusStepIdx].indexOf(exIdx);
-  focusActiveExInStep=Math.max(0,pos);
-  openFocus();
+  focusStepIdx=si<0?0:si;openFocus();
 }
 function openFocus(){
   document.getElementById('focus').style.display='flex';
@@ -539,7 +551,7 @@ function closeFocus(){
 function focusStep(d){
   const n=focusStepIdx+d;
   if(n<0||n>=cur.steps.length)return;
-  focusStepIdx=n;focusActiveExInStep=0;renderFocus();
+  focusStepIdx=n;renderFocus();
   document.getElementById('fc-body').scrollTop=0;
 }
 function renderExFull(ex,rir){
@@ -559,7 +571,7 @@ function renderExFull(ex,rir){
   });
   const lastTxt=last?'ultima '+fmtLast(last.sets)+(mx&&mx.w?' · max '+mx.w+' kg':''):'nessuno storico';
   return '<div class="fc-ex">'
-    +'<div class="fc-nm iz-dsp">'+ex.name+'</div>'
+    +'<div class="fc-nm iz-dsp">'+ex.name+ytIcon(ex)+'</div>'
     +'<div class="fc-meta">'
     +'<span class="fc-sr">'+ex.sets+' × '+ex.lo+'–'+ex.hi+'</span>'
     +(t.w!=null&&t.w>0?'<span class="tgt">→ '+t.w+' kg</span>':'')
@@ -575,33 +587,50 @@ function renderExFull(ex,rir){
     +'<div class="note-box hidden">'+ex.note+'</div>'
     +'</div>';
 }
-function renderExCompact(ex,posInGrp){
+function renderCoupled(grp,rir){
+  const exObjs=grp.map(j=>cur.ex[j]);
+  const suptype=exObjs[0].suptype||'superset';
+  exObjs.forEach(ex=>rowsFor(ex));
   const a=getActiveRef();
-  const rows=a.data[ex.id]||[];
-  const doneSets=rows.filter(s=>s.done).length;
-  const t=targetFor(ex,cur.info);
-  return '<div class="fc-inactive" onclick="setSupActive('+posInGrp+')">'
-    +'<div class="fc-nm iz-dsp" style="font-size:20px">'+ex.name+'</div>'
-    +'<div style="display:flex;align-items:center;gap:12px;margin-top:6px;font-size:13px;color:var(--dim)">'
-    +'<span class="fc-sr" style="font-size:15px">'+ex.sets+'×'+ex.lo+'–'+ex.hi+'</span>'
-    +(t.w!=null&&t.w>0?'<span class="tgt">→ '+t.w+' kg</span>':'')
-    +'<span style="margin-left:auto;font-family:var(--mono);font-size:12px">'+doneSets+' / '+ex.sets+' serie</span>'
-    +'</div></div>';
+  let html='<div class="cpl-lbl">'+(suptype==='alternate'?'serie alternate \u00b7 recupero a ogni serie':'superset \u00b7 recupero dopo la coppia')+'</div>';
+  exObjs.forEach((ex,ei)=>{
+    const t=targetFor(ex,cur.info);const last=lastOf(ex.id);const rows=a.data[ex.id]||[];
+    html+='<div class="cpl-h" style="--exc:'+EXCOLORS[ei]+'">'
+      +'<div class="cpl-h-top"><span class="cpl-dot"></span><span class="fc-nm iz-dsp cpl-nm">'+ex.name+'</span>'+ytIcon(ex)+'</div>'
+      +'<div class="cpl-meta">'
+      +'<span class="fc-sr">'+ex.sets+'\u00d7'+ex.lo+'\u2013'+ex.hi+'</span>'
+      +(t.w!=null&&t.w>0?'<span class="tgt">\u2192 '+t.w+' kg</span>':'')
+      +'<span class="cn">'+(last?'ult. '+fmtLast(last.sets):'\u2014')+'</span>'
+      +'<button class="set-add cpl-add" onclick="addSet(\''+ex.id+'\')">+ serie</button>'
+      +(rows.length>1?'<button class="set-rm" onclick="removeSet(\''+ex.id+'\','+(rows.length-1)+')">\u2212</button>':'')
+      +'</div>'
+      +'<button class="note-tog" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">\u24d8 note \u2304</button><div class="note-box hidden">'+ex.note+'</div>'
+      +'</div>';
+  });
+  const maxSets=Math.max.apply(null,exObjs.map(e=>(a.data[e.id]||[]).length));
+  html+='<div class="cpl-flow"><div class="set-hdr"><span></span><span>kg</span><span>rep</span><span></span></div>';
+  for(let si=0;si<maxSets;si++){
+    exObjs.forEach((ex,ei)=>{
+      const rows=a.data[ex.id]||[];if(si>=rows.length)return;
+      const r=rows[si];const bw=ex.equip==='bodyweight';
+      const wv=(r.w!==''&&r.w!=null)?r.w:'';const rv=(r.r!==''&&r.r!=null)?r.r:'';
+      html+='<div class="set-row cpl-row '+(r.done?'done on':'')+'" style="--exc:'+EXCOLORS[ei]+'">'
+        +'<div class="set-n cpl-rn"><span class="cpl-dot"></span>'+exShort(ex)+' '+(si+1)+'</div>'
+        +'<input class="set-i" id="w_'+ex.id+'_'+si+'" inputmode="decimal" value="'+wv+'" placeholder="'+(bw?'+kg':'kg')+'" onchange="updateSet(\''+ex.id+'\','+si+',\'w\',this.value)">'
+        +'<input class="set-i" inputmode="numeric" value="'+rv+'" placeholder="rep" onchange="updateSet(\''+ex.id+'\','+si+',\'r\',this.value)">'
+        +'<button class="set-ck" onclick="toggleDone(\''+ex.id+'\','+si+','+ex.rest+')">'+(r.done?'\u2611':'\u2610')+'</button>'
+        +'</div>';
+    });
+  }
+  html+='</div>';
+  return html;
 }
-function setSupActive(idx){focusActiveExInStep=idx;renderFocus();}
 function renderFocus(){
   if(!cur)return;
   const grp=cur.steps[focusStepIdx];
   document.getElementById('fc-step').textContent=cur.tpl.name+' · '+(focusStepIdx+1)+'/'+cur.steps.length;
   const rir=cur.info.phase.rir;
-  let html='';
-  if(grp.length>1){
-    grp.forEach((idx,posInGrp)=>{
-      const ex=cur.ex[idx];
-      if(posInGrp===focusActiveExInStep)html+=renderExFull(ex,rir);
-      else html+=renderExCompact(ex,posInGrp);
-    });
-  }else{html+=renderExFull(cur.ex[grp[0]],rir);}
+  const html=(grp.length>1)?renderCoupled(grp,rir):renderExFull(cur.ex[grp[0]],rir);
   document.getElementById('fc-body').innerHTML=html;
   document.getElementById('fc-prev').disabled=focusStepIdx===0;
   const nb=document.getElementById('fc-next');
@@ -637,7 +666,7 @@ function completeSession(){
   });
   if(!arr.length){if(!confirm('Nessuna serie registrata. Completare comunque la seduta?'))return;}
   const sessions=SESS();
-  sessions.push({idx:cfg.done,date:today(),tplKey:cur.info.tplKey,name:cur.tpl.name,block:cur.info.block,phase:cur.info.phase.name,entries:arr});
+  sessions.push({idx:cfg.done,date:today(),tplKey:cur.info.tplKey,name:cur.tpl.name,phase:cur.info.phase.name,entries:arr});
   LS.s(KSE,sessions);
   cfg.done++;saveCfg();
   _activeRef={idx:cfg.done,data:{}};LS.s(KA,_activeRef);
@@ -665,7 +694,7 @@ function renderHistory(){
     let ex='';
     (s.entries||[]).forEach(e=>{ex+='<div class="hblk-ex"><span>'+e.name+'</span><span>'+fmtLast(e.sets)+'</span></div>';});
     if(!ex)ex='<div class="hblk-ex"><span style="color:var(--dimmer)">nessuna serie</span><span></span></div>';
-    html+='<div class="hblk" onclick="openEditSession('+pos+')"><div class="hblk-top"><div class="hblk-nm">'+s.name+' <span class="hblk-bl">· '+s.block+'</span></div><div class="hblk-dt">'+fmtIT(s.date)+' <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-1px;opacity:.65"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg></div></div>'+ex+'</div>';
+    html+='<div class="hblk" onclick="openEditSession('+pos+')"><div class="hblk-top"><div class="hblk-nm">'+s.name+'</div><div class="hblk-dt">'+fmtIT(s.date)+' <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-1px;opacity:.65"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg></div></div>'+ex+'</div>';
   });
   html+='</div>';
   document.getElementById('v-history').innerHTML=html;
@@ -697,7 +726,7 @@ function renderEditSess(){
   });
   if(s.tplKey&&TEMPLATES[s.tplKey]){
     const have=new Set(editCtx.data.map(e=>e.id));
-    const missing=TEMPLATES[s.tplKey].ex(s.block).filter(p=>!have.has(p.id));
+    const missing=TEMPLATES[s.tplKey].ex().filter(p=>!have.has(p.id));
     if(missing.length){
       html+='<div class="fc-ex" style="border-bottom:none"><button class="set-add" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">+ aggiungi esercizio dimenticato</button><div class="es-add hidden">';
       missing.forEach(p=>{html+='<button class="es-addbtn" onclick="addEditExercise(\''+p.id+'\')">'+p.name+' <span style="color:var(--dimmer)">· '+p.sets+'×'+p.lo+'–'+p.hi+'</span></button>';});
@@ -711,7 +740,7 @@ function addEditSet(ei){if(!editCtx)return;const ss=editCtx.data[ei].sets;ss.pus
 function removeEditSet(ei,si){if(!editCtx)return;editCtx.data[ei].sets.splice(si,1);renderEditSess();}
 function addEditExercise(id){
   if(!editCtx)return;const s=SESS()[editCtx.pos];if(!s||!s.tplKey||!TEMPLATES[s.tplKey])return;
-  const tex=TEMPLATES[s.tplKey].ex(s.block).find(x=>x.id===id);if(!tex||editCtx.data.some(e=>e.id===id))return;
+  const tex=TEMPLATES[s.tplKey].ex().find(x=>x.id===id);if(!tex||editCtx.data.some(e=>e.id===id))return;
   editCtx.data.push({id:tex.id,name:tex.name,sets:Array.from({length:tex.sets},()=>({w:'',r:''}))});renderEditSess();
 }
 function saveEditSession(){
@@ -724,16 +753,12 @@ function saveEditSession(){
 function renderProgram(){
   const info=infoFor(cfg.done);
   let html='<div class="sec"><div class="sec-h">programma</div>'
-    +'<div class="pg-info">Ciclo a sedute, 4 template che ruotano: Lower A → Upper A → Lower B → Upper B. Blocchi <b>squat</b> e <b>stacco</b> alternati ogni 28 sedute. Fasi 2/2/2/1 rotazioni (accumulo base → accumulo+ → intensificazione → deload). Doppia progressione con peso obiettivo proposto.<br><br>Ora: <b style="color:var(--acc)">'+TEMPLATES[info.tplKey].name+'</b> · blocco '+info.block+' · '+info.phase.name+' (rot. '+info.rotInMacro+'/7).</div>';
+    +'<div class="pg-info">Ciclo a sedute, 4 template che ruotano: Lower A \u2192 Upper A \u2192 Lower B \u2192 Upper B. Squat e stacco da terra sono <b>protagonisti settimanali fissi</b> (Lower A squat, Lower B stacco), per tenere alta la frequenza tecnica su entrambi. Fasi 2/2/2/1 rotazioni (accumulo base \u2192 accumulo+ \u2192 intensificazione \u2192 deload) come onda di intensit\u00e0. Doppia progressione con peso obiettivo proposto.<br><br>Ora: <b style="color:var(--acc)">'+TEMPLATES[info.tplKey].name+'</b> \u00b7 '+info.phase.name+' (rot. '+info.rotInMacro+'/7).</div>';
   ['lowerA','upperA','lowerB','upperB'].forEach(k=>{
     const t=TEMPLATES[k];
-    const exS=t.ex('squat'),exT=t.ex('stacco');
-    const hasVar=exS.some((e,i)=>e.id!==exT[i].id);
     html+='<div class="pg"><div class="pg-nm">'+t.name+'<span>'+t.focus+'</span></div>';
-    exS.forEach((e,i)=>{
-      const alt=exT[i];
-      const nm=(hasVar&&e.id!==alt.id)?e.name+' <span style="color:var(--dimmer)">/ '+alt.name+'</span>':e.name;
-      html+='<div class="pg-ex"><span>'+nm+(e.sup?' <span style="color:var(--acc)">⮂</span>':'')+(e.abs?' <span style="color:var(--dimmer)">core</span>':'')+'</span><span>'+e.sets+'×'+e.lo+'–'+e.hi+'</span></div>';
+    t.ex().forEach(e=>{
+      html+='<div class="pg-ex"><span>'+e.name+(e.sup?' <span style="color:var(--acc)">\u2b82</span>':'')+(e.abs?' <span style="color:var(--dimmer)">core</span>':'')+'</span><span>'+e.sets+'\u00d7'+e.lo+'\u2013'+e.hi+'</span></div>';
     });
     html+='</div>';
   });
@@ -754,9 +779,10 @@ function showView(v){
 
 function openSettings(){
   const info=infoFor(cfg.done);
-  document.getElementById('ss-pos').innerHTML='Posizione: <b>'+TEMPLATES[info.tplKey].name+'</b> · blocco '+info.block+'<br>'+info.phase.name+' · rotazione '+info.rotInMacro+'/7 · seduta n. '+(cfg.done+1);
+  document.getElementById('ss-pos').innerHTML='Posizione: <b>'+TEMPLATES[info.tplKey].name+'</b><br>'+info.phase.name+' · rotazione '+info.rotInMacro+'/7 · seduta n. '+(cfg.done+1);
   document.getElementById('sk').value=(cfg.sync&&cfg.sync.key)||'';
   document.getElementById('sb').value=(cfg.sync&&cfg.sync.binId)||'';
+  document.getElementById('ytc').value=(cfg&&cfg.ytChannel)||'';
   document.getElementById('settings').classList.add('show');
 }
 function closeSettings(){document.getElementById('settings').classList.remove('show');}
@@ -821,13 +847,14 @@ function importData(e){
 function startProgram(){
   const d=document.getElementById('setupDate').value;
   if(!d){alert('Seleziona una data');return;}
-  cfg={start:d,done:0,sync:{},theme:'light'};saveCfg();LS.s(KA,{idx:0,data:{}});applyTheme('light');
+  cfg={start:d,done:0,sync:{},theme:'light',ytChannel:'Jeff Nippard'};saveCfg();LS.s(KA,{idx:0,data:{}});applyTheme('light');
   document.getElementById('setup').style.display='none';
   document.getElementById('app').style.display='flex';
   showView('today');
 }
 function init(){
   applyTheme((cfg&&cfg.theme)?cfg.theme:'light');
+  if(cfg&&!cfg.ytChannel){cfg.ytChannel='Jeff Nippard';saveCfg();}
   if(!cfg){
     document.getElementById('setupDate').value=today();
     document.getElementById('setup').style.display='flex';
