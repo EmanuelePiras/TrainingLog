@@ -127,8 +127,19 @@ button{cursor:pointer;background:none;border:none}
 .yt-btn{display:inline-flex;align-items:center;color:#ff0033;padding:3px 4px;vertical-align:middle;margin-left:8px}
 .note-box{background:var(--surf);border-left:2px solid var(--accb);padding:11px 13px;font-size:13px;color:var(--dim);line-height:1.6;margin-top:9px}
 .note-box.hidden{display:none}
-.fc-inactive{padding:14px 18px;border-top:2px solid var(--line2);background:var(--surf);cursor:pointer}
-.fc-inactive:active{opacity:.75}
+.cpl-lbl{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.04em;padding:16px 18px 0}
+.cpl-h{padding:12px 18px;border-bottom:1px solid var(--line)}
+.cpl-h-top{display:flex;align-items:center;gap:8px}
+.cpl-dot{width:8px;height:8px;background:var(--exc,var(--acc));flex-shrink:0;display:inline-block}
+.cpl-nm{font-size:22px}
+.cpl-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:11px;margin-top:7px}
+.cpl-add{flex:none;padding:6px 10px}
+.cpl-flow{padding:14px 18px 6px}
+.cpl-flow .set-hdr{grid-template-columns:66px 1fr 1fr 36px}
+.cpl-row{grid-template-columns:66px 1fr 1fr 36px;margin-bottom:8px}
+.cpl-rn{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);font-family:var(--mono);text-align:left}
+.cpl-row.on .cpl-rn{color:var(--acc)}
+.set-row.cur{background:var(--accd);box-shadow:inset 2px 0 0 var(--acc)}
 .fc-nav{display:flex;border-top:1px solid var(--line);flex-shrink:0;padding-bottom:var(--safe-bottom)}
 .fc-nav button{flex:1;border-right:1px solid var(--line);padding:15px 0;font-family:var(--dsp);font-size:18px;font-weight:700;color:var(--dim);letter-spacing:.03em}
 .fc-nav button:last-child{border-right:none;color:var(--acc)}
@@ -314,13 +325,13 @@ const SYNC_SVG='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stro
 const TEMPLATES={
   upper:{name:'Upper',focus:'massa · parte alta',
     ex:b=>[
-      {id:'pushup',yt:'push up',name:'Push-up su maniglie',sets:3,lo:8,hi:10,rest:90,equip:'bodyweight',note:'Spinta orizzontale. Corpo in linea, scapole che scorrono, scendi col petto tra le maniglie. Se 8\u201310 puliti non vengono, parti sulle ginocchia e progredisci.'},
+      {id:'pushup',yt:'push up',name:'Push-up su maniglie',sets:3,lo:8,hi:12,rest:90,equip:'bodyweight',note:'Spinta orizzontale. Corpo in linea, scapole che scorrono, scendi col petto tra le maniglie. Progressione a varianti: ginocchia \u2192 standard \u2192 piedi rialzati. Chiuso 3\u00d712, passa alla variante successiva.'},
       {id:'rowdb',yt:'one arm dumbbell row',name:'Rematore manubrio (appoggio divano)',sets:3,lo:8,hi:10,rest:90,equip:'dumbbell',note:'Una mano e un ginocchio sul bracciolo del divano, schiena piatta. Tira di gomito verso l\u2019anca, una serie per lato. Il recupero parte dopo aver fatto entrambi i lati.'},
       {id:'ohp',yt:'dumbbell shoulder press',name:'Overhead press manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Spinta sopra la testa, in piedi o seduta sulla fit ball. Core stretto, niente inarcamento lombare, manubri che salgono in linea.'},
-      {id:'reverfly',yt:'dumbbell reverse fly',name:'Reverse fly / rematore alto su fit ball',sets:3,lo:10,hi:12,rest:75,equip:'dumbbell',note:'Petto appoggiato sulla fit ball, apri le braccia ai lati portando le scapole verso il centro. Manubri leggeri, movimento controllato. Posteriori e dorsali alti.'},
+      {id:'reverfly',yt:'dumbbell reverse fly',name:'Reverse fly / rematore alto su fit ball',sets:3,lo:10,hi:12,rest:75,equip:'dumbbell',sup:'B1',suptype:'superset',note:'Petto appoggiato sulla fit ball, apri le braccia ai lati portando le scapole verso il centro. Manubri leggeri, movimento controllato. Posteriori e dorsali alti.'},
+      {id:'lateral',yt:'lateral raise',name:'Alzate laterali manubri',sets:3,lo:10,hi:12,rest:60,equip:'dumbbell',sup:'B1',suptype:'superset',note:'Superset con reverse fly. Manubri leggeri, salita fino all\u2019altezza delle spalle, niente slancio. La tecnica conta pi\u00f9 del carico.'},
       {id:'curl',yt:'ez bar curl',name:'Curl con EZ-bar',sets:3,lo:8,hi:10,rest:90,equip:'barbell',note:'Gomiti fermi ai fianchi, salita controllata senza slancio del busto. La presa EZ \u00e8 pi\u00f9 gentile sui polsi.'},
-      {id:'triext',yt:'overhead tricep extension',name:'Estensione tricipiti EZ (overhead)',sets:3,lo:10,hi:12,rest:75,equip:'barbell',note:'EZ-bar sopra la testa, gomiti stretti e fermi, scendi dietro la nuca e stendi. Lavora il capo lungo del tricipite in allungamento.'},
-      {id:'lateral',yt:'lateral raise',name:'Alzate laterali manubri',sets:3,lo:12,hi:15,rest:60,equip:'dumbbell',note:'Manubri leggeri, salita fino all\u2019altezza delle spalle, niente slancio. Deltoide laterale: la tecnica conta pi\u00f9 del carico.'}
+      {id:'triext',yt:'overhead tricep extension',name:'Estensione tricipiti EZ (overhead)',sets:3,lo:10,hi:12,rest:75,equip:'barbell',note:'EZ-bar sopra la testa, gomiti stretti e fermi, scendi dietro la nuca e stendi. Lavora il capo lungo del tricipite in allungamento.'}
     ]},
   lower:{name:'Lower',focus:'massa · gambe & glutei',
     ex:b=>[
@@ -328,8 +339,8 @@ const TEMPLATES={
       {id:'goblet',yt:'goblet squat',name:'Goblet squat manubrio',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Manubrio tenuto al petto, scendi tra le anche con busto eretto, talloni a terra. Ottimo per tecnica e gambe.'},
       {id:'lunge',yt:'dumbbell lunge',name:'Affondi / Bulgarian split squat manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Manubri ai lati, una gamba per volta, ginocchio in traccia. Una serie = entrambe le gambe; il recupero parte dopo aver completato i due lati.'},
       {id:'hipthrust',yt:'hip thrust',name:'Hip thrust EZ-bar',sets:3,lo:10,hi:12,rest:90,equip:'barbell',note:'Schiena appoggiata al divano o alla fit ball, EZ-bar sull\u2019anca (usa un cuscino). Spingi coi glutei, pausa 1s in alto, niente iperestensione lombare.'},
-      {id:'calf',yt:'standing calf raise',name:'Calf raise in piedi manubri',sets:3,lo:12,hi:15,rest:60,equip:'dumbbell',note:'Manubri ai lati, sali sulle punte con ROM completo, pausa 1s in basso. Puoi usare un rialzo sotto gli avampiedi.'},
-      {id:'core',yt:'plank',name:'Core su fit ball / plank',sets:2,lo:12,hi:15,rest:60,equip:'bodyweight',abs:true,note:'Crunch sulla fit ball (ROM ampio) o plank a tenuta. Espira in contrazione, niente strappi al collo.'}
+      {id:'calf',yt:'standing calf raise',name:'Calf raise in piedi manubri',sets:3,lo:10,hi:12,rest:60,equip:'dumbbell',note:'Manubri ai lati, sali sulle punte con ROM completo, pausa 1s in basso. Puoi usare un rialzo sotto gli avampiedi.'},
+      {id:'core',yt:'plank',name:'Core su fit ball / plank',sets:2,lo:10,hi:12,rest:60,equip:'bodyweight',abs:true,note:'Crunch sulla fit ball (ROM ampio) o plank a tenuta. Espira in contrazione, niente strappi al collo.'}
     ]}
 };
 
@@ -380,8 +391,9 @@ function targetFor(ex,info){
   const atTop=last.sets.filter(s=>(s.w||0)===lw&&s.r>=ex.hi).length;
   const hitTop=atTop>=ex.sets;
   if(hitTop){
+    if(ex.equip==='bodyweight')return{w:0,reps:ex.lo,reason:'top chiuso → passa alla variante più difficile'};
     if(lw>0){const inc=incFor(lw,ex.equip);return{w:lw+inc,reps:ex.lo,reason:'chiuso il top → +'+inc+' kg'};}
-    return{w:0,reps:ex.lo,reason:'top chiuso → aggiungi zavorra o rep'};
+    return{w:0,reps:ex.lo,reason:'top chiuso → più ripetizioni'};
   }
   return{w:lw||null,reps:ex.lo,reason:'punta a più ripetizioni'};
 }
@@ -416,10 +428,9 @@ function toggleDone(id,i,rest){
       const exObjs=grp.map(j=>cur.ex[j]);
       const suptype=exObjs[0].suptype||'superset';
       const myIdx=exObjs.findIndex(e=>e.id===id);
-      const other=(myIdx+1)%grp.length;
-      if(suptype==='alternate'){startRest(rest);focusActiveExInStep=other;}
-      else{if(myIdx===grp.length-1){startRest(rest);focusActiveExInStep=0;}else{focusActiveExInStep=other;}}
-    }else{startRest(rest);}
+      if(suptype==='alternate')startRest(rest);
+      else if(myIdx===grp.length-1)startRest(rest);
+    }else startRest(rest);
   }
   renderFocus();
 }
@@ -472,6 +483,7 @@ function renderToday(){
     +'</div></div><div class="led">';
   cur.steps.forEach(grp=>{
     const sup=grp.length>1;
+    const stype=sup?(cur.ex[grp[0]].suptype||'superset'):'';
     let inner='';
     grp.forEach(idx=>{
       const ex=cur.ex[idx];
@@ -487,20 +499,16 @@ function renderToday(){
         +'<div class="led-data"><div class="led-sr">'+ex.sets+'×'+ex.lo+'–'+ex.hi+'</div><div class="led-tg">'+tg+'</div></div>'
         +'</div>';
     });
-    html+=sup?'<div class="sup"><div class="sup-l">superset</div>'+inner+'</div>':inner;
+    html+=sup?'<div class="sup"><div class="sup-l">'+(stype==='alternate'?'serie alternate':'superset')+'</div>'+inner+'</div>':inner;
   });
   html+='</div><div class="complete-wrap"><button class="complete" onclick="completeSession()">Completa seduta</button></div>';
   document.getElementById('v-today').innerHTML=html;
 }
 
 let focusStepIdx=0;
-let focusActiveExInStep=0;
 function openFocusEx(exIdx){
   const si=cur.steps.findIndex(g=>g.includes(exIdx));
-  focusStepIdx=si<0?0:si;
-  const pos=cur.steps[focusStepIdx].indexOf(exIdx);
-  focusActiveExInStep=Math.max(0,pos);
-  openFocus();
+  focusStepIdx=si<0?0:si;openFocus();
 }
 function openFocus(){
   document.getElementById('focus').style.display='flex';
@@ -515,7 +523,7 @@ function closeFocus(){
 function focusStep(d){
   const n=focusStepIdx+d;
   if(n<0||n>=cur.steps.length)return;
-  focusStepIdx=n;focusActiveExInStep=0;renderFocus();
+  focusStepIdx=n;renderFocus();
   document.getElementById('fc-body').scrollTop=0;
 }
 function renderExFull(ex,rir){
@@ -551,34 +559,58 @@ function renderExFull(ex,rir){
     +'<div class="note-box hidden">'+ex.note+'</div>'
     +'</div>';
 }
-function renderExCompact(ex,posInGrp){
+const EXCOLORS=['var(--acc)','var(--paper)'];
+function exShort(ex){return ex.name.split(' ')[0];}
+function renderCoupled(grp,rir){
+  const exObjs=grp.map(j=>cur.ex[j]);
+  const suptype=exObjs[0].suptype||'superset';
+  exObjs.forEach(ex=>rowsFor(ex));
   const a=getActiveRef();
-  const rows=a.data[ex.id]||[];
-  const doneSets=rows.filter(s=>s.done).length;
-  const t=targetFor(ex,cur.info);
-  return '<div class="fc-inactive" onclick="setSupActive('+posInGrp+')">'
-    +'<div class="fc-nm iz-dsp" style="font-size:20px">'+ex.name+'</div>'
-    +'<div style="display:flex;align-items:center;gap:12px;margin-top:6px;font-size:13px;color:var(--dim)">'
-    +'<span class="fc-sr" style="font-size:15px">'+ex.sets+'×'+ex.lo+'–'+ex.hi+'</span>'
-    +(t.w!=null&&t.w>0?'<span class="tgt">→ '+t.w+' kg</span>':'')
-    +'<span style="margin-left:auto;font-family:var(--mono);font-size:12px">'+doneSets+' / '+ex.sets+' serie</span>'
-    +'</div></div>';
+  let html='<div class="cpl-lbl">'+(suptype==='alternate'?'serie alternate \u00b7 recupero a ogni serie':'superset \u00b7 recupero dopo la coppia')+'</div>';
+  exObjs.forEach((ex,ei)=>{
+    const t=targetFor(ex,cur.info);const last=lastOf(ex.id);const rows=a.data[ex.id]||[];
+    html+='<div class="cpl-h" style="--exc:'+EXCOLORS[ei]+'">'
+      +'<div class="cpl-h-top"><span class="cpl-dot"></span><span class="fc-nm iz-dsp cpl-nm">'+ex.name+'</span>'+ytIcon(ex)+'</div>'
+      +'<div class="cpl-meta">'
+      +'<span class="fc-sr">'+ex.sets+'\u00d7'+ex.lo+'\u2013'+ex.hi+'</span>'
+      +(t.w!=null&&t.w>0?'<span class="tgt">\u2192 '+t.w+' kg</span>':'')
+      +'<span class="cn">'+(last?'ult. '+fmtLast(last.sets):'\u2014')+'</span>'
+      +'<button class="set-add cpl-add" onclick="addSet(\''+ex.id+'\')">+ serie</button>'
+      +(rows.length>1?'<button class="set-rm" onclick="removeSet(\''+ex.id+'\','+(rows.length-1)+')">\u2212</button>':'')
+      +'</div>'
+      +'<button class="note-tog" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">\u24d8 note \u2304</button><div class="note-box hidden">'+ex.note+'</div>'
+      +'</div>';
+  });
+  const maxSets=Math.max.apply(null,exObjs.map(e=>(a.data[e.id]||[]).length));
+  html+='<div class="cpl-flow"><div class="set-hdr"><span></span><span>kg</span><span>rep</span><span></span></div>';
+  for(let si=0;si<maxSets;si++){
+    exObjs.forEach((ex,ei)=>{
+      const rows=a.data[ex.id]||[];if(si>=rows.length)return;
+      const r=rows[si];const bw=ex.equip==='bodyweight';
+      const wv=(r.w!==''&&r.w!=null)?r.w:'';const rv=(r.r!==''&&r.r!=null)?r.r:'';
+      html+='<div class="set-row cpl-row '+(r.done?'done on':'')+'" style="--exc:'+EXCOLORS[ei]+'">'
+        +'<div class="set-n cpl-rn"><span class="cpl-dot"></span>'+exShort(ex)+' '+(si+1)+'</div>'
+        +'<input class="set-i" id="w_'+ex.id+'_'+si+'" inputmode="decimal" value="'+wv+'" placeholder="'+(bw?'+kg':'kg')+'" onchange="updateSet(\''+ex.id+'\','+si+',\'w\',this.value)">'
+        +'<input class="set-i" inputmode="numeric" value="'+rv+'" placeholder="rep" onchange="updateSet(\''+ex.id+'\','+si+',\'r\',this.value)">'
+        +'<button class="set-ck" onclick="toggleDone(\''+ex.id+'\','+si+','+ex.rest+')">'+(r.done?'\u2611':'\u2610')+'</button>'
+        +'</div>';
+    });
+  }
+  html+='</div>';
+  return html;
 }
-function setSupActive(idx){focusActiveExInStep=idx;renderFocus();}
 function renderFocus(){
   if(!cur)return;
   const grp=cur.steps[focusStepIdx];
   document.getElementById('fc-step').textContent=cur.tpl.name+' · '+(focusStepIdx+1)+'/'+cur.steps.length;
   const rir='1\u20132 dal cedimento';
-  let html='';
-  if(grp.length>1){
-    grp.forEach((idx,posInGrp)=>{
-      const ex=cur.ex[idx];
-      if(posInGrp===focusActiveExInStep)html+=renderExFull(ex,rir);
-      else html+=renderExCompact(ex,posInGrp);
-    });
-  }else{html+=renderExFull(cur.ex[grp[0]],rir);}
+  const html=(grp.length>1)?renderCoupled(grp,rir):renderExFull(cur.ex[grp[0]],rir);
   document.getElementById('fc-body').innerHTML=html;
+  try{
+    const rows=Array.prototype.slice.call(document.querySelectorAll('#fc-body .set-row'));
+    const curRow=rows.filter(r=>!r.classList.contains('done'))[0];
+    if(curRow){curRow.classList.add('cur');if(curRow.scrollIntoView)curRow.scrollIntoView({block:'center',behavior:'smooth'});}
+  }catch(e){}
   document.getElementById('fc-prev').disabled=focusStepIdx===0;
   const nb=document.getElementById('fc-next');
   const lastStep=focusStepIdx===cur.steps.length-1;
@@ -700,7 +732,7 @@ function saveEditSession(){
 function renderProgram(){
   const info=infoFor(cfg.done);
   let html='<div class="sec"><div class="sec-h">programma</div>'
-    +'<div class="pg-info">Ciclo a sedute, 2 schede che ruotano: Upper \u2192 Lower \u2192 Upper \u2192 Lower. Niente blocchi n\u00e9 fasi: <b>doppia progressione</b> pura. Quando chiudi tutte le serie al top delle ripetizioni, sali di carico (EZ-bar +1 kg, manubri al manubrio successivo). 4 sedute a settimana, riposo libero.<br><br>Intensit\u00e0: <b>fermati 1\u20132 ripetizioni prima del cedimento</b>.<br><br>Ora: <b style="color:var(--acc)">'+TEMPLATES[info.tplKey].name+'</b>.</div>';
+    +'<div class="pg-info">Ciclo a sedute, 2 schede che ruotano: Upper \u2192 Lower \u2192 Upper \u2192 Lower. Niente blocchi n\u00e9 fasi: <b>doppia progressione</b> pura. Quando chiudi tutte le serie al top delle ripetizioni, sali di carico (EZ-bar +1 kg, manubri al manubrio successivo); negli esercizi a corpo libero si progredisce a ripetizioni e poi di <b>variante</b> (es. push-up: ginocchia \u2192 standard \u2192 piedi rialzati). Reverse fly e alzate laterali sono in <b>superset</b>: una serie dell\u2019uno subito seguita da una dell\u2019altro, recupero dopo la coppia. 4 sedute a settimana, riposo libero.<br><br>Intensit\u00e0: <b>fermati 1\u20132 ripetizioni prima del cedimento</b>. Ogni 8\u201310 settimane, se senti stanchezza accumulata, concediti una settimana leggera: stessi esercizi, met\u00e0 serie, \u221230% di carico.<br><br>Ora: <b style="color:var(--acc)">'+TEMPLATES[info.tplKey].name+'</b>.</div>';
   ['upper','lower'].forEach(k=>{
     const t=TEMPLATES[k];
     html+='<div class="pg"><div class="pg-nm">'+t.name+'<span>'+t.focus+'</span></div>';
@@ -798,6 +830,12 @@ function startProgram(){
   document.getElementById('setup').style.display='none';
   document.getElementById('app').style.display='flex';
   showView('today');
+}
+if(window.visualViewport){
+  (function(){const vv=window.visualViewport;
+    const fix=()=>{const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);const r=document.getElementById('rest');if(!r)return;
+      if(kb>60)r.style.bottom=(kb+8)+'px';else r.style.bottom='';};
+    vv.addEventListener('resize',fix);vv.addEventListener('scroll',fix);})();
 }
 function init(){
   applyTheme((cfg&&cfg.theme)?cfg.theme:'light');
