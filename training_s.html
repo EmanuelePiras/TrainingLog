@@ -651,7 +651,7 @@ function completeSession(){
   _activeRef={idx:cfg.done,data:{}};LS.s(KA,_activeRef);
   closeFocus();timerStop();renderToday();
   autoSync();
-  alert('Seduta completata. Prossima: '+TEMPLATES[infoFor(cfg.done).tplKey].name);
+  showView('history');
 }
 function undoLast(){
   const sessions=SESS();
