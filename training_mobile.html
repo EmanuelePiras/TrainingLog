@@ -608,7 +608,7 @@ function renderExFull(ex,rir){
     +'<div class="set-hdr"><span></span><span>'+(ex.equip==='bodyweight'?'+kg':'kg')+'</span><span>rep</span><span></span></div>'
     +'<div class="sets">'+setRows+'</div>'
     +'<div class="set-tools"><button class="set-add" onclick="addSet(\''+ex.id+'\')">+ aggiungi serie</button>'
-    +(rows.length>1?'<button class="set-rm" onclick="removeSet(\''+ex.id+'\','+(rows.length-1)+')">−</button>':'')+'</div>'
+    +'</div>'
     +'<button class="note-tog" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">ⓘ note tecniche ⌄</button>'
     +'<div class="note-box hidden">'+ex.note+'</div>'
     +'</div>';
@@ -628,7 +628,6 @@ function renderCoupled(grp,rir){
       +(t.w!=null&&t.w>0?'<span class="tgt">\u2192 '+t.w+' kg</span>':'')
       +'<span class="cn">'+(last?'ult. '+fmtLast(last.sets):'\u2014')+'</span>'
       +'<button class="set-add cpl-add" onclick="addSet(\''+ex.id+'\')">+ serie</button>'
-      +(rows.length>1?'<button class="set-rm" onclick="removeSet(\''+ex.id+'\','+(rows.length-1)+')">\u2212</button>':'')
       +'</div>'
       +'<button class="note-tog" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">\u24d8 note \u2304</button><div class="note-box hidden">'+ex.note+'</div>'
       +'</div>';
