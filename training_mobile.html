@@ -326,7 +326,11 @@ const PHASES=[
   {name:'Deload',rir:'~60% · 2 serie',deload:true,main:{lo:4,hi:6}}
 ];
 const MACRO_LEN=28;
-const STEP={barbell:1,dumbbell:2,machine:2,bodyweight:1};
+const STEP={barbell:1,dumbbell:2,machine:1,bodyweight:1};
+function stepFor(w,equip){
+  if(equip==='dumbbell'){if(w<20)return 1;if(w<36)return 2;return 1;}
+  return STEP[equip]||1;
+}
 const MI=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
 const DI=['dom','lun','mar','mer','gio','ven','sab'];
 const YT_SVG='<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="4" fill="#ff0033"/><path d="M10 8.5l5.5 3.5L10 15.5v-7z" fill="#fff"/></svg>';
@@ -414,24 +418,23 @@ function entries(id){const out=[];SESS().forEach(s=>(s.entries||[]).forEach(e=>{
 function lastOf(id){const a=entries(id);return a.length?a[a.length-1]:null;}
 function maxOf(id){let m=0,md=null;entries(id).forEach(e=>e.sets.forEach(s=>{if(s.w>m){m=s.w;md=e.date;}}));return m?{w:m,date:md}:null;}
 function topW(sets){return sets.reduce((m,s)=>Math.max(m,s.w||0),0);}
-function roundLoad(w,equip){const st=STEP[equip]||1;return Math.round(w/st)*st;}
-function incFor(w,equip){const st=STEP[equip]||1;let inc=Math.round((w*0.025)/st)*st;if(inc<st)inc=st;return inc;}
+function roundLoad(w,equip){const st=stepFor(w,equip);return Math.round(w/st)*st;}
+function incFor(w,equip){const st=stepFor(w,equip);let inc=Math.round((w*0.025)/st)*st;if(inc<st)inc=st;return inc;}
 function targetFor(ex,info){
   const hist=entries(ex.id);
   if(!hist.length)return{w:null,reps:ex.lo,reason:'prima volta — scegli il carico'};
   let base=null;for(let i=hist.length-1;i>=0;i--){const h=hist[i];if(h.phase!=='Deload'&&!h.tech){base=h;break;}}
   if(!base)base=hist[hist.length-1];
-  const bw=topW(base.sets);
+  const bw=base.sets.length?(base.sets[0].w||0):0;
   if(info.phase.deload)return{w:bw?roundLoad(bw*0.6,ex.equip):null,reps:ex.lo,reason:'deload ~60%'};
   if(ex.tech)return{w:bw?roundLoad(bw*0.9,ex.equip):null,reps:ex.lo,reason:'tecnica −10% · '+ex.sets+' serie'};
   if(ex.main&&base.phase==='Intensificazione'&&info.phase.name==='Accumulo base'&&bw>0)
     return{w:roundLoad(bw*0.93,ex.equip),reps:ex.lo,reason:'nuovo ciclo → −7%'};
   if(ex.main&&base.phase&&base.phase!==info.phase.name&&bw>0)
     return{w:bw,reps:ex.lo,reason:'nuova fase → stesso peso, '+ex.lo+'–'+ex.hi};
-  const atTop=base.sets.filter(s=>(s.w||0)===bw&&s.r>=ex.hi).length;
-  const hitTop=atTop>=ex.sets;
+  const hitTop=base.sets.length>=ex.sets&&base.sets[0].r>=ex.hi&&base.sets.every(x=>x.r>=ex.lo);
   if(hitTop){
-    if(bw>0){const inc=incFor(bw,ex.equip);return{w:bw+inc,reps:ex.lo,reason:'chiuso il top → +'+inc+' kg'};}
+    if(bw>0){const inc=incFor(bw,ex.equip);return{w:bw+inc,reps:ex.lo,reason:'serie 1 al top, resto in range → +'+inc+' kg'};}
     return{w:0,reps:ex.lo,reason:'top chiuso → aggiungi zavorra o rep'};
   }
   return{w:bw||null,reps:ex.lo,reason:'punta a più ripetizioni'};
@@ -687,6 +690,7 @@ function renderTimer(){
 }
 
 function completeSession(){
+  if(!confirm('Chiudere e salvare la seduta?'))return;
   const a=getActiveRef();
   const arr=[];
   cur.ex.forEach(e=>{
