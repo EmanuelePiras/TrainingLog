@@ -387,12 +387,11 @@ function incFor(w,equip){const st=STEP[equip]||1;let inc=Math.round((w*0.025)/st
 function targetFor(ex,info){
   const last=lastOf(ex.id);
   if(!last)return{w:null,reps:ex.lo,reason:'prima volta — scegli il carico'};
-  const lw=topW(last.sets);
-  const atTop=last.sets.filter(s=>(s.w||0)===lw&&s.r>=ex.hi).length;
-  const hitTop=atTop>=ex.sets;
+  const lw=last.sets.length?(last.sets[0].w||0):0;
+  const hitTop=last.sets.length>=ex.sets&&last.sets[0].r>=ex.hi&&last.sets.every(x=>x.r>=ex.lo);
   if(hitTop){
     if(ex.equip==='bodyweight')return{w:0,reps:ex.lo,reason:'top chiuso → passa alla variante più difficile'};
-    if(lw>0){const inc=incFor(lw,ex.equip);return{w:lw+inc,reps:ex.lo,reason:'chiuso il top → +'+inc+' kg'};}
+    if(lw>0){const inc=incFor(lw,ex.equip);return{w:lw+inc,reps:ex.lo,reason:'serie 1 al top, resto in range → +'+inc+' kg'};}
     return{w:0,reps:ex.lo,reason:'top chiuso → più ripetizioni'};
   }
   return{w:lw||null,reps:ex.lo,reason:'punta a più ripetizioni'};
@@ -635,6 +634,7 @@ function renderTimer(){
 }
 
 function completeSession(){
+  if(!confirm('Chiudere e salvare la seduta?'))return;
   const a=getActiveRef();
   const arr=[];
   cur.ex.forEach(e=>{
