@@ -419,9 +419,18 @@ function rowsFor(ex){
 function updateSet(id,i,field,val){const a=getActiveRef();if(!a.data[id])return;a.data[id][i][field]=val;
   if(field==='w'&&i===0&&val!==''){for(let j=1;j<a.data[id].length;j++){if(!a.data[id][j].done){a.data[id][j].w=val;const inp=document.getElementById('w_'+id+'_'+j);if(inp)inp.value=val;}}}
   LS.s(KA,a);}
+function sessionDone(){
+  const a=getActiveRef();
+  for(let k=0;k<cur.ex.length;k++){
+    const ex=cur.ex[k];const rows=a.data[ex.id];
+    if(!rows||rows.length<ex.sets)return false;
+    for(let j=0;j<rows.length;j++)if(!rows[j].done)return false;
+  }
+  return true;
+}
 function toggleDone(id,i,rest){
   const a=getActiveRef();const r=a.data[id][i];r.done=!r.done;LS.s(KA,a);
-  if(r.done){
+  if(r.done&&!sessionDone()){
     const grp=cur.steps[focusStepIdx];
     if(grp.length>1){
       const exObjs=grp.map(j=>cur.ex[j]);
@@ -431,6 +440,7 @@ function toggleDone(id,i,rest){
       else if(myIdx===grp.length-1)startRest(rest);
     }else startRest(rest);
   }
+  if(r.done&&sessionDone())timerStop();
   renderFocus();
 }
 function addSet(id){const a=getActiveRef();const rows=a.data[id];const lastW=rows.length?rows[rows.length-1].w:'';rows.push({w:lastW,r:'',done:false});LS.s(KA,a);renderFocus();}
@@ -612,9 +622,10 @@ function renderFocus(){
   document.getElementById('fc-prev').disabled=focusStepIdx===0;
   const nb=document.getElementById('fc-next');
   const lastStep=focusStepIdx===cur.steps.length-1;
+  const allDone=sessionDone();
   nb.disabled=false;
-  nb.textContent=lastStep?'Fine seduta ›':'Avanti ›';
-  nb.onclick=lastStep?function(){closeFocus();}:function(){focusStep(1);};
+  nb.textContent=allDone?'Completa seduta ›':(lastStep?'Fine seduta ›':'Avanti ›');
+  nb.onclick=allDone?function(){completeSession();}:(lastStep?function(){closeFocus();}:function(){focusStep(1);});
 }
 
 let timer={t:0,total:0,run:false,iv:null};
