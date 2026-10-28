@@ -219,7 +219,7 @@ button{cursor:pointer;background:none;border:none}
   <div class="setup-inner">
     <div class="setup-tag">// training.log · massa &amp; forma</div>
     <h1 class="iz-dsp">Massa<br>&amp; forma</h1>
-    <p>Programma a sedute, non a calendario: 2 schede che ruotano — Upper · Lower. Doppia progressione semplice, allenamenti a casa. Salti quando vuoi, riprendi da dove eri.</p>
+    <p>Programma a sedute, non a calendario: 2 schede che ruotano (Upper · Lower). Doppia progressione semplice, allenamenti a casa. Salti quando vuoi, riprendi da dove eri.</p>
     <div class="field">
       <label>Data di inizio</label>
       <input type="date" id="setupDate">
@@ -340,7 +340,7 @@ const TEMPLATES={
       {id:'lunge',yt:'dumbbell lunge',name:'Affondi / Bulgarian split squat manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',note:'Manubri ai lati, una gamba per volta, ginocchio in traccia. Una serie = entrambe le gambe; il recupero parte dopo aver completato i due lati.'},
       {id:'hipthrust',yt:'hip thrust',name:'Hip thrust EZ-bar',sets:3,lo:10,hi:12,rest:90,equip:'barbell',note:'Schiena appoggiata al divano o alla fit ball, EZ-bar sull\u2019anca (usa un cuscino). Spingi coi glutei, pausa 1s in alto, niente iperestensione lombare.'},
       {id:'calf',yt:'standing calf raise',name:'Calf raise in piedi manubri',sets:3,lo:10,hi:12,rest:60,equip:'dumbbell',note:'Manubri ai lati, sali sulle punte con ROM completo, pausa 1s in basso. Puoi usare un rialzo sotto gli avampiedi.'},
-      {id:'core',yt:'plank',name:'Core su fit ball / plank',sets:2,lo:10,hi:12,rest:60,equip:'bodyweight',abs:true,note:'Crunch sulla fit ball (ROM ampio) o plank a tenuta. Espira in contrazione, niente strappi al collo.'}
+      {id:'core',yt:'stability ball crunch',name:'Crunch su fit ball',sets:2,lo:10,hi:12,rest:60,equip:'bodyweight',abs:true,note:'Schiena appoggiata sulla fit ball, ROM ampio: scendi in allungamento e sali arrotondando la colonna. Espira in contrazione, niente strappi al collo.'}
     ]}
 };
 
@@ -386,7 +386,7 @@ function roundLoad(w,equip){const st=STEP[equip]||1;return Math.round(w/st)*st;}
 function incFor(w,equip){const st=STEP[equip]||1;let inc=Math.round((w*0.025)/st)*st;if(inc<st)inc=st;return inc;}
 function targetFor(ex,info){
   const last=lastOf(ex.id);
-  if(!last)return{w:null,reps:ex.lo,reason:'prima volta — scegli il carico'};
+  if(!last)return{w:null,reps:ex.lo,reason:'prima volta: scegli il carico'};
   const lw=last.sets.length?(last.sets[0].w||0):0;
   const hitTop=last.sets.length>=ex.sets&&last.sets[0].r>=ex.hi&&last.sets.every(x=>x.r>=ex.lo);
   if(hitTop){
@@ -500,7 +500,7 @@ function renderToday(){
       const last=lastOf(ex.id);
       const done=exDone(ex);
       const tg=t.w!=null?(t.w>0?'→ '+t.w+' kg':'a corpo libero'):'da impostare';
-      const lastTxt=last?'ultima '+fmtLast(last.sets):'—';
+      const lastTxt=last?'ultima '+fmtLast(last.sets):'-';
       const num=String(idx+1).padStart(2,'0');
       inner+='<div class="led-row '+(done?'done':'')+'" onclick="openFocusEx('+idx+')">'
         +'<div class="led-i">'+(done?'✓':num)+'</div>'
@@ -583,7 +583,7 @@ function renderCoupled(grp,rir){
       +'<div class="cpl-meta">'
       +'<span class="fc-sr">'+ex.sets+'\u00d7'+ex.lo+'\u2013'+ex.hi+'</span>'
       +(t.w!=null&&t.w>0?'<span class="tgt">\u2192 '+t.w+' kg</span>':'')
-      +'<span class="cn">'+(last?'ult. '+fmtLast(last.sets):'\u2014')+'</span>'
+      +'<span class="cn">'+(last?'ult. '+fmtLast(last.sets):'-')+'</span>'
       +'<button class="set-add cpl-add" onclick="addSet(\''+ex.id+'\')">+ serie</button>'
       +'</div>'
       +'<button class="note-tog" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">\u24d8 note \u2304</button><div class="note-box hidden">'+ex.note+'</div>'
