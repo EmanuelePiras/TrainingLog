@@ -429,7 +429,20 @@ function sessionDone(){
   return true;
 }
 function toggleDone(id,i,rest){
-  const a=getActiveRef();const r=a.data[id][i];r.done=!r.done;LS.s(KA,a);
+  const a=getActiveRef();const r=a.data[id][i];
+  if(!r.done){
+    const ex=cur.ex.find(e=>e.id===id);
+    const t=ex?targetFor(ex,cur.info):null;
+    const w=parseFloat(r.w);
+    if(t&&t.w>0&&w>t.w){
+      a.conf=a.conf||{};
+      if(!(a.conf[id]>=w)){
+        if(!confirm('Hai inserito '+w+' kg, sopra i '+t.w+' proposti. Confermi?'))return;
+        a.conf[id]=w;
+      }
+    }
+  }
+  r.done=!r.done;LS.s(KA,a);
   if(r.done&&!sessionDone()){
     const grp=cur.steps[focusStepIdx];
     if(grp.length>1){
