@@ -222,7 +222,7 @@ button{cursor:pointer;background:none;border:none}
   <div class="setup-inner">
     <div class="setup-tag">// training.log · forza &amp; massa</div>
     <h1 class="iz-dsp">Forza<br>&amp; massa</h1>
-    <p>Programma a sedute, non a calendario: 4 template che ruotano — Lower A · Upper A · Lower B · Upper B — con blocchi squat/stacco alternati. Salti quando vuoi, riprendi da dove eri.</p>
+    <p>Programma a sedute, non a calendario: 4 template che ruotano (Lower A · Upper A · Lower B · Upper B), con squat e stacco ogni settimana a pendolo. Salti quando vuoi, riprendi da dove eri.</p>
     <div class="field">
       <label>Data di inizio</label>
       <input type="date" id="setupDate">
@@ -341,7 +341,7 @@ const TEMPLATES={
     ex:b=>[
       {id:'squat',main:true,name:'Squat low bar',sets:4,lo:4,hi:6,rest:210,equip:'barbell',yt:'low bar squat',note:'Schiena neutra, discesa controllata, recupero pieno tra le serie pesanti.'},
       {id:'hack',name:'Hack squat',sets:3,lo:6,hi:8,rest:120,equip:'machine',yt:'hack squat',note:'Quad complementare allo squat, zero carico spinale. ROM completo.'},
-      {id:'rdl',name:'RDL bilanciere',sets:3,lo:8,hi:10,rest:120,equip:'barbell',yt:'romanian deadlift',note:'Femorali in allungamento. Flessione d\u2019anca, schiena piatta, bilanciere lungo le cosce. Moderato: fermati abbondante dal cedimento \u2014 non \u00e8 la giornata di carico sulla schiena.'},
+      {id:'rdl',name:'RDL bilanciere',sets:3,lo:8,hi:10,rest:120,equip:'barbell',yt:'romanian deadlift',note:'Femorali in allungamento. Flessione d\u2019anca, schiena piatta, bilanciere lungo le cosce. Moderato: fermati abbondante dal cedimento, non \u00e8 la giornata di carico sulla schiena.'},
       {id:'calfstand',name:'Calf raise in piedi',sets:3,lo:10,hi:12,rest:60,equip:'machine',yt:'standing calf raise',note:'Gastrocnemio. ROM completo, pausa 1s in basso.'}
     ]},
   upperA:{name:'Upper A',focus:'forza · orizzontale (panca)',
@@ -350,7 +350,7 @@ const TEMPLATES={
       {id:'rowdb',name:'Rematore manubrio',sets:3,lo:6,hi:8,rest:150,equip:'dumbbell',sup:'A1',suptype:'alternate',yt:'one arm dumbbell row',note:'Serie alternate con panca. Tira di gomito, gabbia aperta.'},
       {id:'dip',name:'Dip zavorrati',sets:3,lo:7,hi:9,rest:120,equip:'bodyweight',yt:'weighted chest dip',note:'Petto/tricipiti. Busto leggermente avanti per il petto.'},
       {id:'curlinc',name:'Curl inclinato manubri',sets:3,lo:8,hi:10,rest:90,equip:'dumbbell',yt:'incline dumbbell curl',note:'Panca a 45\u00b0, gomito dietro il busto = massimo allungamento del capo lungo.'},
-      {id:'crunchcable',name:'Crunch ai cavi',sets:3,lo:10,hi:12,rest:60,equip:'machine',abs:true,yt:'cable crunch',note:'Addome \u2014 flessione caricabile. Arrotonda la colonna, espira in contrazione.'}
+      {id:'crunchcable',name:'Crunch ai cavi',sets:3,lo:10,hi:12,rest:60,equip:'machine',abs:true,yt:'cable crunch',note:'Addome: flessione caricabile. Arrotonda la colonna, espira in contrazione.'}
     ]},
   lowerB:{name:'Lower B',focus:'forza · hip-dominant',
     ex:b=>[
@@ -366,7 +366,7 @@ const TEMPLATES={
       {id:'inclinedb',name:'Inclinata 30\u00b0 manubri',sets:3,lo:8,hi:10,rest:120,equip:'dumbbell',yt:'incline dumbbell press',note:'Seconda esposizione petto, angolo alto.'},
       {id:'lateral',name:'Alzate laterali',sets:3,lo:10,hi:12,rest:60,equip:'dumbbell',sup:'B1',suptype:'superset',yt:'lateral raise',note:'Superset con face pull. Salita controllata, niente slancio.'},
       {id:'facepull',name:'Face pull / rear delt',sets:3,lo:10,hi:12,rest:60,equip:'machine',sup:'B1',suptype:'superset',yt:'face pull',note:'Superset con alzate. Deltoide posteriore + salute della spalla.'},
-      {id:'dragonflag',name:'Dragon flag / ab wheel',sets:3,lo:4,hi:8,rest:75,equip:'bodyweight',abs:true,yt:'dragon flag',note:'Addome \u2014 anti-estensione. Corpo rigido, controlla la discesa.'}
+      {id:'dragonflag',name:'Dragon flag / ab wheel',sets:3,lo:4,hi:8,rest:75,equip:'bodyweight',abs:true,yt:'dragon flag',note:'Addome: anti-estensione. Corpo rigido, controlla la discesa.'}
     ]}
 };
 
@@ -422,17 +422,23 @@ function roundLoad(w,equip){const st=stepFor(w,equip);return Math.round(w/st)*st
 function incFor(w,equip){const st=stepFor(w,equip);let inc=Math.round((w*0.025)/st)*st;if(inc<st)inc=st;return inc;}
 function targetFor(ex,info){
   const hist=entries(ex.id);
-  if(!hist.length)return{w:null,reps:ex.lo,reason:'prima volta — scegli il carico'};
-  let base=null;for(let i=hist.length-1;i>=0;i--){const h=hist[i];if(h.phase!=='Deload'&&!h.tech){base=h;break;}}
+  if(!hist.length)return{w:null,reps:ex.lo,reason:'prima volta: scegli il carico'};
+  const s1=h=>(h.sets.length?(h.sets[0].w||0):0);
+  let full=null;for(let i=hist.length-1;i>=0;i--){const h=hist[i];if(h.phase!=='Deload'&&!h.tech){full=h;break;}}
+  let base=null;for(let i=hist.length-1;i>=0;i--){const h=hist[i];if(h.phase==='Deload')continue;if(!h.tech||!full||s1(h)>=s1(full)){base=h;break;}}
   if(!base)base=hist[hist.length-1];
-  const bw=base.sets.length?(base.sets[0].w||0):0;
+  const bw=s1(base);
   if(info.phase.deload)return{w:bw?roundLoad(bw*0.6,ex.equip):null,reps:ex.lo,reason:'deload ~60%'};
   if(ex.tech)return{w:bw?roundLoad(bw*0.9,ex.equip):null,reps:ex.lo,reason:'tecnica −10% · '+ex.sets+' serie'};
   if(ex.main&&base.phase==='Intensificazione'&&info.phase.name==='Accumulo base'&&bw>0)
     return{w:roundLoad(bw*0.93,ex.equip),reps:ex.lo,reason:'nuovo ciclo → −7%'};
-  if(ex.main&&base.phase&&base.phase!==info.phase.name&&bw>0)
-    return{w:bw,reps:ex.lo,reason:'nuova fase → stesso peso, '+ex.lo+'–'+ex.hi};
-  const hitTop=base.sets.length>=ex.sets&&base.sets[0].r>=ex.hi&&base.sets.every(x=>x.r>=ex.lo);
+  const bph=PHASES.find(p=>p.name===base.phase);
+  const blo=(ex.main&&bph&&!bph.deload)?bph.main.lo:ex.lo;
+  const bhi=(ex.main&&bph&&!bph.deload)?bph.main.hi:ex.hi;
+  const need=base.tech?3:ex.sets;
+  const hitTop=base.sets.length>=need&&base.sets[0].r>=bhi&&base.sets.every(x=>x.r>=blo);
+  if(!hitTop&&ex.main&&base.phase&&base.phase!==info.phase.name&&bw>0)
+    return{w:bw,reps:ex.lo,reason:'nuova fase: stesso peso, '+ex.lo+'–'+ex.hi};
   if(hitTop){
     if(bw>0){const inc=incFor(bw,ex.equip);return{w:bw+inc,reps:ex.lo,reason:'serie 1 al top, resto in range → +'+inc+' kg'};}
     return{w:0,reps:ex.lo,reason:'top chiuso → aggiungi zavorra o rep'};
@@ -557,7 +563,7 @@ function renderToday(){
       const last=lastOf(ex.id);
       const done=exDone(ex);
       const tg=t.w!=null?(t.w>0?'→ '+t.w+' kg':'a corpo libero'):'da impostare';
-      const lastTxt=last?'ultima '+fmtLast(last.sets):'—';
+      const lastTxt=last?'ultima '+fmtLast(last.sets):'-';
       const num=String(idx+1).padStart(2,'0');
       inner+='<div class="led-row '+(done?'done':'')+'" onclick="openFocusEx('+idx+')">'
         +'<div class="led-i">'+(done?'✓':num)+'</div>'
@@ -639,7 +645,7 @@ function renderCoupled(grp,rir){
       +'<div class="cpl-meta">'
       +'<span class="fc-sr">'+ex.sets+'\u00d7'+ex.lo+'\u2013'+ex.hi+'</span>'
       +(t.w!=null&&t.w>0?'<span class="tgt">\u2192 '+t.w+' kg</span>':'')
-      +'<span class="cn">'+(last?'ult. '+fmtLast(last.sets):'\u2014')+'</span>'
+      +'<span class="cn">'+(last?'ult. '+fmtLast(last.sets):'-')+'</span>'
       +'<button class="set-add cpl-add" onclick="addSet(\''+ex.id+'\')">+ serie</button>'
       +'</div>'
       +'<button class="note-tog" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">\u24d8 note \u2304</button><div class="note-box hidden">'+ex.note+'</div>'
@@ -798,7 +804,7 @@ function saveEditSession(){
 function renderProgram(){
   const info=infoFor(cfg.done);
   let html='<div class="sec"><div class="sec-h">programma</div>'
-    +'<div class="pg-info">Ciclo a sedute, 4 template che ruotano: Lower A \u2192 Upper A \u2192 Lower B \u2192 Upper B. Squat (Lower A) e stacco (Lower B) sono settimanali fissi con <b>pendolo</b>: a rotazioni alterne uno \u00e8 di spinta (progressione piena) e l\u2019altro di tecnica (\u221210%, 3 serie), poi si scambiano. Fasi 2/2/2/1 rotazioni con <b>range reali</b> sulle 4 alzate principali: accumulo base 6\u20138 \u2192 accumulo+ 5\u20137 \u2192 intensificazione 4\u20136 \u2192 deload. Tra le fasi il peso resta e il range scende; dopo il deload si riparte a 6\u20138 con \u22127%. Doppia progressione con peso obiettivo proposto.<br><br><b>Fuori dalla palestra.</b> Cardio: bici casa\u2013lavoro tutti i giorni, 20\u201325 min a tratta, ritmo <b>facile</b> (respiro da conversazione; in salita rapporto agile) \u2014 \u00e8 la base aerobica, ~5 h/settimana. Facoltativo 1\u00d7/settimana, in un giorno senza pesi: un ritorno intenso con 3\u20134 ripetute in salita. Non spingere al limite nei tragitti quotidiani.<br><br><b>Alimentazione.</b> Proteine 105\u2013130 g/die: uovo intero a colazione, yogurt greco, cena con porzione proteica piena (carne/pesce/2 uova o mozzarella 125 g; legumi 2\u20133 volte a settimana nelle cene leggere) + una fonte di carboidrati. Kefir quotidiano ok. Verdure a rotazione, non solo insalata.<br><br>Ora: <b style="color:var(--acc)">'+TEMPLATES[info.tplKey].name+'</b> \u00b7 '+info.phase.name+' (rot. '+info.rotInMacro+'/7).</div>';
+    +'<div class="pg-info">Ciclo a sedute, 4 template che ruotano: Lower A \u2192 Upper A \u2192 Lower B \u2192 Upper B. Squat (Lower A) e stacco (Lower B) sono settimanali fissi con <b>pendolo</b>: a rotazioni alterne uno \u00e8 di spinta (progressione piena) e l\u2019altro di tecnica (\u221210%, 3 serie), poi si scambiano. Fasi 2/2/2/1 rotazioni con <b>range reali</b> sulle 4 alzate principali: accumulo base 6\u20138 \u2192 accumulo+ 5\u20137 \u2192 intensificazione 4\u20136 \u2192 deload. Tra le fasi il peso resta e il range scende; dopo il deload si riparte a 6\u20138 con \u22127%. Doppia progressione con peso obiettivo proposto.<br><br><b>Fuori dalla palestra.</b> Cardio: bici casa\u2013lavoro tutti i giorni, 20\u201325 min a tratta, ritmo <b>facile</b> (respiro da conversazione; in salita rapporto agile): \u00e8 la base aerobica, ~5 h/settimana. Facoltativo 1\u00d7/settimana, in un giorno senza pesi: un ritorno intenso con 3\u20134 ripetute in salita. Non spingere al limite nei tragitti quotidiani.<br><br><b>Alimentazione.</b> Proteine 105\u2013130 g/die: uovo intero a colazione, yogurt greco, cena con porzione proteica piena (carne/pesce/2 uova o mozzarella 125 g; legumi 2\u20133 volte a settimana nelle cene leggere) + una fonte di carboidrati. Kefir quotidiano ok. Verdure a rotazione, non solo insalata.<br><br>Ora: <b style="color:var(--acc)">'+TEMPLATES[info.tplKey].name+'</b> \u00b7 '+info.phase.name+' (rot. '+info.rotInMacro+'/7).</div>';
   ['lowerA','upperA','lowerB','upperB'].forEach(k=>{
     const t=TEMPLATES[k];
     html+='<div class="pg"><div class="pg-nm">'+t.name+'<span>'+t.focus+'</span></div>';
